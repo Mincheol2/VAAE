@@ -4,11 +4,11 @@ from torch import nn
 from torch.nn import functional as F
 
 '''
-    Default option assumes that
+    The default option assumes that
     prior p ~ N(0,I) and posterior q ~ N(mu, var). (Note that var is diagonal.)
-    For numerical stablity, we use an argument 'logvar' instead of var.
+    For numerical stability, we use an argument 'logvar' instead of var.
     
-    You can change prior's mean and variance by changing the argument 'prior_mu' and 'prior_logvar'.
+    You can change the prior's mean and variance by changing the argument 'prior_mu' and 'prior_logvar'.
 '''
 
 
