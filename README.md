@@ -10,7 +10,7 @@ The baseline is from [Here](https://github.com/ruizheliUOA/TWR-VAE/)
 
 
 
-## What things are changed?
+## Usage
 
 To train the model,
 
@@ -18,7 +18,7 @@ To train the model,
 python main.py -dt ptb --alpha 1 #KL Div
 ```
 
-- Comparing to origin, I add two arguments and remove one argument.
+- Compared to the origin, I add two arguments and remove one argument.
 
 --alpha : Parameter for alpha-divergence. ( Default = 1.0)
 
@@ -30,7 +30,7 @@ And remove '''--setting''' : This is for Teacher forcing. But I checked this arg
 cf) Teacher Forcing is the technique where the target word is passed as the next input to the decoder
 
 
-### Loss.py
+## Loss.py : generalized alpha-divergence module
 
 - We can use generalized alpha-divergence. (For details, see that file.)
 
@@ -42,7 +42,7 @@ cf) Teacher Forcing is the technique where the target word is passed as the next
 <img width="1000" alt="image" src="https://user-images.githubusercontent.com/43122330/200512800-a28aa7b4-1293-4981-9333-206ea7e4d833.png">
 
 
-- I think we don't need to use 'valid' set in the original model. So use only train/test set.
+- I think we don't need to use 'valid' set in the original model. So we use only train/test set.
 
 - This model generates both train_loss.txt and **test_loss.txt**
 
