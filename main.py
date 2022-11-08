@@ -89,12 +89,12 @@ elif args.dataset == "yahoo":
 
 if args.load:
     model_dir = args.model_dir
-    recon_dir = base_path+args.dataset+'_recon_save/'
+    recon_dir = base_path+args.dataset+'_recon_save_' + args.alpha + '/'
 
 else:
 
-    model_dir = base_path+'/'+args.dataset+'_model_save/'
-    recon_dir = base_path+'/'+args.dataset+'_recon_save/'
+    model_dir = base_path+'/'+args.dataset+'_model_save_' + str(args.alpha) + '/'
+    recon_dir = base_path+'/'+args.dataset+'_recon_save_' + str(args.alpha) + '/'
 
     if not os.path.exists(model_dir):
         os.makedirs(model_dir)
@@ -303,9 +303,9 @@ else:
     eval_ppl = 1e5
     
     with open(model_dir+'train_TWRvae_loss.txt', 'w') as f:
-        f.write("ep \t\t recon_loss \t\t var_loss \t\t acc \t\t nll_loss \t\t ppl \n")
+        f.write("ep \t recon_loss \t div_loss \t acc \t nll_loss \t ppl \n")
     with open(recon_dir+'test_TWRvae_loss.txt', 'w') as f:
-        f.write("ep \t\t recon_loss \t\t var_loss \t\t acc \t\t nll_loss \t\t ppl \n")
+        f.write("ep \t recon_loss \t div_loss \t NLL \t PPL \t MI \n")    
         
         
     for ep in tqdm(range(ep+1, args.epochs+1)):
