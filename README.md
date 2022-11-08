@@ -1,8 +1,12 @@
 # Modified-TWR-VAE
 
-The baseline is from [Here](https://github.com/ruizheliUOA/TWR-VAE/), and I modified some vague codes, and add some convenient tools.
+This is the modification of TWR-VAE(Timestep-Wise Regularization Variational AutoEncooder) for my NLP / DL projects.
 
-Note that there is only **lang-model part**, not dialogue part.
+The baseline is from [Here](https://github.com/ruizheliUOA/TWR-VAE/)
+
+I edit some vague parts in original model, and write new codes to help my projects.
+
+Currently, there is only **lang-model part**, not dialogue part.
 
 ## What things are changed?
 
@@ -12,7 +16,7 @@ To train the model,
 python main.py -dt ptb --alpha 1 #KL Div
 ```
 
-- I add two arguments.
+- Comparing to origin, I add two arguments and remove one argument.
 
 --alpha : Parameter for alpha-divergence. ( Default = 1.0)
 
@@ -24,15 +28,14 @@ And remove '''--setting''' : This is for Teacher forcing. But I checked this arg
 cf) Teacher Forcing is the technique where the target word is passed as the next input to the decoder
 
 
-### Make Loss.py
+### Loss.py
 
 - We can use generalized alpha-divergence. (For details, see that file.)
 
 
-### Result (loss.txt)
+### Result (& generate loss.txt)
 
-- I use tqdm bar : It is very simple module. In training process, you can see the remaining time.
-
+- Use tqdm time bar : It is very simple module. In training process, you can see the remaining time.
 
 - I think we don't need to use 'recon' set in this model. We use only train/test set.
 
@@ -41,5 +44,5 @@ cf) Teacher Forcing is the technique where the target word is passed as the next
 
 ### Plot.ipynb
 
-- I uploaded plot.ipynb which helps to make loss plot.
+- I'll upload plot.ipynb which helps to make loss plot.
 
