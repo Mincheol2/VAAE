@@ -2,11 +2,13 @@
 
 This is the modification of TWR-VAE(Timestep-Wise Regularization Variational AutoEncooder) for my NLP / DL projects.
 
-The baseline is from [Here](https://github.com/ruizheliUOA/TWR-VAE/)
-
 I edit some vague parts in original model, and write new codes to help my projects.
 
 Currently, there is only **lang-model part**, not dialogue part.
+
+The baseline is from [Here](https://github.com/ruizheliUOA/TWR-VAE/)
+
+
 
 ## What things are changed?
 
@@ -35,9 +37,12 @@ cf) Teacher Forcing is the technique where the target word is passed as the next
 
 ### Result (& generate loss.txt)
 
-- Use tqdm time bar : It is very simple module. In training process, you can see the remaining time.
+- Use tqdm time bar : In training process, you can see the remaining time.
 
-- I think we don't need to use 'recon' set in this model. We use only train/test set.
+<img width="1000" alt="image" src="https://user-images.githubusercontent.com/43122330/200512800-a28aa7b4-1293-4981-9333-206ea7e4d833.png">
+
+
+- I think we don't need to use 'valid' set in the original model. So use only train/test set.
 
 - This model generates both train_loss.txt and **test_loss.txt**
 
