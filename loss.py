@@ -8,7 +8,7 @@ from torch.nn import functional as F
     prior p ~ N(0,I) and posterior q ~ N(mu, var). (Note that var is diagonal.)
     For numerical stablity, we use an argument 'logvar' instead of var.
     
-    You can change prior's mean and variance by modifying the argument 'prior_mu' and 'prior_logvar'.
+    You can change prior's mean and variance by changing the argument 'prior_mu' and 'prior_logvar'.
 '''
 
 
