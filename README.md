@@ -8,6 +8,11 @@ Note that there is only **lang-model part**, not dialogue part.
 
 ## What things are changed?
 
+### Make Loss.py
+
+- We can use generalized alpha-divergence. (For details, see that file.)
+
+
 ### Result (loss.txt)
 
 - I think we don't need to use 'recon' set in this model. So this model become using only train/test set.
@@ -17,12 +22,11 @@ Note that there is only **lang-model part**, not dialogue part.
 
 ### Plot.ipynb
 
-- For convenient analysis, I uploaded plot.ipynb, which helps to make loss plot.
+- I uploaded plot.ipynb which helps to make loss plot.
 
 ### tqdm bar
 
-- In training process, you can see the remaining time.
-
+- It is very simple. In training process, you can see the remaining time.
 
 
 ### Args
