@@ -2,7 +2,7 @@
 
 This is the modification of TWR-VAE(Timestep-Wise Regularization Variational AutoEncooder) for my NLP / DL projects.
 
-I edit some vague parts in original model, and write new codes to help my projects.
+I edit some vague parts in the original model and write new codes to help my projects.
 
 Currently, there is only **lang-model part**, not dialogue part.
 
