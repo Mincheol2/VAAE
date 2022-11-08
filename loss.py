@@ -1,7 +1,6 @@
 import numpy as np
 import torch
 from torch import nn
-from torch.nn import functional as F
 
 '''
     The default option assumes that
@@ -58,7 +57,7 @@ class Alpha_Family():
                 raise Exception(f'min(var_denom) = {torch.min(var_denom)} is not positive. Divergence may not be well-defined.')
             
             const_alpha = 1 / (alpha * (1-alpha))
-            prod_const = self.post_logvar * (1-alpha) + self.prior_logvar * alpha - 0.5 * var_denom.log()
+            prod_const = 0.5 * ((1-alpha) * self.post_logvar + alpha * self.prior_logvar - var_denom.log())
             exp_term = -0.5 * alpha * (1-alpha) * (self.prior_mu - self.post_mu).pow(2) / var_denom
              
             log_prodterm = torch.sum(prod_const + exp_term)
