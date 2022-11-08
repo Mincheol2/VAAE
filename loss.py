@@ -15,9 +15,8 @@ class Alpha_Family():
     def __init__(self, post_mu, post_logvar, prior_mu=None, prior_logvar=None):
         self.post_mu = post_mu
         self.post_logvar = post_logvar
-        self.N = len(post_mu)
-        self.prior_mu = torch.zeros(self.N) if prior_mu is None else prior_mu
-        self.prior_logvar = torch.zeros(self.N) if prior_logvar is None else prior_logvar
+        self.prior_mu = torch.zeros_like(post_mu) if prior_mu is None else prior_mu
+        self.prior_logvar = torch.zeros_like(post_logvar) if prior_logvar is None else prior_logvar
         self.post_var = self.post_logvar.exp()
         self.prior_var = self.prior_logvar.exp()
 
