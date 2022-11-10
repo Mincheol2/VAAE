@@ -26,7 +26,7 @@ python main.py -dt ptb --alpha 1.0 --beta 1.0 #Default KL Div
 
 
 
-## Run the model in Colab & Visualization
+## Run & Visualize the model in Colab
 
 - See [TWR_VAE_colab.ipynb](https://github.com/Mincheol2/modified-TWR_VAE/blob/main/TWR_VAE_colab.ipynb)
 
