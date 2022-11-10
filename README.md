@@ -18,23 +18,18 @@ To train the model,
 python main.py -dt ptb --alpha 1.0 --beta 1.0 #Default KL Div
 ```
 
-- Compared to the origin, I add two arguments and remove one argument.
+- Compared to the origin, I add two arguments.
 
 --alpha : Parameter for alpha-divergence. ( Default = 1.0)
 
 --beta : Weight for alpha-divergence. ( Default = 1.0)
 
---seed : Set seed number (Default = 999)
 
 
 ## Run the model in Colab
 
 - See TWR_VAE_colab.ipynb
 
-
-And remove '''--setting''' : This is for Teacher forcing. But I checked this argument didn't work.
-
-cf) Teacher Forcing is the technique where the target word is passed as the next input to the decoder
 
 
 ## Loss.py : generalized alpha-divergence module
