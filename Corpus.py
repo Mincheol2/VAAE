@@ -17,26 +17,20 @@ class Corpus(Dataset):
         print("start to load Corpus data")
         with open(path, 'r') as f:
             corpus = f.readlines()
-        
-        #corpus = [[tokens]:list, len:int]
         corpus = [self._split(i.strip()) for i in corpus]
         corpus = [(t, len(t)) for t in corpus]
         
-        
         if sort:
-            corpus.sort(key=operator.itemgetter(1)) # ascend order
+            
+            corpus.sort(key=operator.itemgetter(1))
         self.texts = [x for x, _ in corpus]
-        
         print("start to build dictionary")
         if word_dic is not None:
             self.word_id = word_dic
         else:
             doc = " ".join([" ".join(i) for i in self.texts])
             self.word_id = self._make_dic(doc, min_word_count)
-        
-        # id to word dict.
         self.id_word = self._make_inv_dic(self.word_id)
-        
         self.voca_size = len(self.word_id)
         self.sos_token = torch.tensor([1])
         self.eos_token = torch.tensor([2])
@@ -47,11 +41,11 @@ class Corpus(Dataset):
 
     def _split(self, sen):
         sen = sen.lower()
-        sen = re.sub(r"[.]+", ".", sen) # multiple period to be singled
+        sen = re.sub(r"[.]+", ".", sen)
         sen = re.sub(r"([.?!,]|'s)", r" \1", sen)
         return re.split(r"\s+", sen)
 
-    def _split2(self, labels): # No use in corpus.py.
+    def _split2(self, labels):
         labels = re.sub(r"[ ]", "-", labels)
         return re.split(r",-*", labels)
 
@@ -83,7 +77,6 @@ class Corpus(Dataset):
 
     def _txt_vecs(self, txt):
         v = [self.word_id.get(w, 1) for w in txt]
-        # Dictionary get : if not found, return arg2
         v = [2]+v+[3]
         v = torch.tensor(v)
         return v

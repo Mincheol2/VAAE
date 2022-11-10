@@ -7,6 +7,11 @@ import random
 import math
 import numpy as np
 
+
+
+
+
+
 class Decoder(nn.Module):
     def __init__(self, output_dim, emb_dim, hid_dim, z_dim, n_layers, dropout, bidirectional=False, teacher_force=0.5, rnn_type='lstm', z_mode=None, setting=None, device=None):
         super(Decoder, self).__init__()
@@ -33,7 +38,7 @@ class Decoder(nn.Module):
         self.z2h_c = nn.Linear(z_dim, hid_dim, bias=False)
         self.out = nn.Linear(hid_dim, output_dim)
         self.dropout = nn.Dropout(dropout)
-        self.teacher_force = teacher_force # Useless..
+        self.teacher_force = teacher_force
 
 
     def forward(self, enc_z, sen):
@@ -89,6 +94,7 @@ class Decoder(nn.Module):
         return prediction, hidden, cell
 
     def loss(self, prod, target, weight):
+        
         recon_loss = F.cross_entropy(
             prod.view(-1, prod.shape[2]), target[1:].view(-1),
             ignore_index=0, reduction="sum")
