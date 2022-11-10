@@ -13,7 +13,7 @@ import numpy as np
 
 
 class Decoder(nn.Module):
-    def __init__(self, output_dim, emb_dim, hid_dim, z_dim, n_layers, dropout, bidirectional=False, teacher_force=0.5, rnn_type='lstm', z_mode=None, setting=None, device=None):
+    def __init__(self, output_dim, emb_dim, hid_dim, z_dim, n_layers, dropout, bidirectional=False, rnn_type='lstm', z_mode=None, device=None):
         super(Decoder, self).__init__()
         self.emb_dim = emb_dim
         self.hid_dim = hid_dim
@@ -23,7 +23,6 @@ class Decoder(nn.Module):
         self.rnn_type = rnn_type
         self.z_mode = z_mode
         self.device = device
-        self.setting = setting
         self.layer_dim = n_layers*2 if bidirectional else n_layers
         self.embedding = nn.Embedding(output_dim, emb_dim, padding_idx=0)
         if self.rnn_type == 'lstm':
@@ -38,7 +37,6 @@ class Decoder(nn.Module):
         self.z2h_c = nn.Linear(z_dim, hid_dim, bias=False)
         self.out = nn.Linear(hid_dim, output_dim)
         self.dropout = nn.Dropout(dropout)
-        self.teacher_force = teacher_force
 
 
     def forward(self, enc_z, sen):

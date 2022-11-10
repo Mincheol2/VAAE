@@ -116,16 +116,9 @@ def sentence_acc(prod, target):
     correct = torch.eq(prod, target).to(dtype=torch.float).sum()
     return correct.item()
 
-def epoch_time(start_time, end_time):
-    elapsed_time = end_time - start_time
-    elapsed_mins = int(elapsed_time / 60)
-    elapsed_secs = int(elapsed_time - (elapsed_mins * 60))
-    return elapsed_mins, elapsed_secs
-
-def train(corpus, ep, alpha):
+def train(corpus, ep, alpha, beta):
     
-    print("--------------------------")
-    start_time = time.time()
+    print("----------------TRAIN-----------------")
     encoder.train()
     decoder.train()
     total = 0
@@ -143,7 +136,7 @@ def train(corpus, ep, alpha):
         z, mu, logvar, sen_len = encoder(sen)
 
         prod = decoder(z, sen)
-        kl_loss = encoder.loss(mu, logvar, alpha,beta)
+        kl_loss = encoder.loss(mu, logvar, alpha, beta)
         recon_loss = decoder.loss(prod, sen, sen_len)
         
         ((kl_loss+recon_loss)*1).backward()
@@ -157,11 +150,8 @@ def train(corpus, ep, alpha):
         words_total = words_total + words
         batch_total += batch_size
         
-    end_time = time.time()
-    
-    epoch_mins, epoch_secs = epoch_time(start_time, end_time)
     print(
-        f"Time: {epoch_mins}m {epoch_secs}s| Train {ep}: recon_loss={(recon_loss_total/(batch_total)):.04f}, div_loss={(kl_loss_total/(batch_total)):.04f}, nll_loss={((recon_loss_total+kl_loss_total)/(batch_total)):.04f}, nll_loss_perword={((recon_loss_total+kl_loss_total)/words_total):.04f}, ppl={(math.exp((recon_loss_total+kl_loss_total)/words_total)):.04f}, acc={(correct_total/words_total):.04f}\n")
+        f"Train {ep}: recon_loss={(recon_loss_total/(batch_total)):.04f}, div_loss={(kl_loss_total/(batch_total)):.04f}, nll_loss={((recon_loss_total+kl_loss_total)/(batch_total)):.04f}, nll_loss_perword={((recon_loss_total+kl_loss_total)/words_total):.04f}, ppl={(math.exp((recon_loss_total+kl_loss_total)/words_total)):.04f}, acc={(correct_total/words_total):.04f}")
     return recon_loss_total/(batch_total), kl_loss_total/(batch_total),  correct_total/words_total, (recon_loss_total+kl_loss_total)/(batch_total), math.exp((recon_loss_total+kl_loss_total)/words_total)
 
 # =================================
@@ -175,7 +165,7 @@ def get_sentence(batch):
         sens.append(" ".join(sen))
     return sens
 
-def reconstruction(corpus, ep, alpha):
+def reconstruction(corpus, ep, alpha,beta):
     encoder.eval()
     decoder.eval()
     out_org = []
@@ -216,7 +206,7 @@ def reconstruction(corpus, ep, alpha):
     ppl = math.exp((recon_loss_total+kl_loss_total)/words_total)
     
     
-    print(f"Test: recon_loss:{recon_loss:.04f}, kl_loss:{kl_loss:.04f}, nll_loss:{nll_loss:.04f}, nll_loss_perword:{nll_loss_perword:.04f}, ppl:{ppl:.04f})
+    print(f"Test: recon_loss:{recon_loss:.04f}, kl_loss:{kl_loss:.04f}, nll_loss:{nll_loss:.04f}, nll_loss_perword:{nll_loss_perword:.04f}, ppl:{ppl:.04f}")
 
     
     text = []
@@ -244,10 +234,8 @@ encoder = Encoder(voca_dim, emb_dim, hid_dim, args.zdim, args.layers, args.dropo
               partial_lag=args.partial,
               beta = beta).to(device)
 decoder = Decoder(voca_dim, emb_dim, hid_dim, args.zdim, args.layers, args.dropout,
-                  teacher_force=None,
                   rnn_type=args.rnn_type,
                   z_mode=args.z_type,
-                  setting=args.setting,
                   device=device).to(device)
 opt = optim.Adam(list(encoder.parameters()) +
                  list(decoder.parameters()), lr=lr, eps=1e-6, weight_decay=1e-5)
@@ -257,11 +245,11 @@ print(encoder)
 print(decoder)
 if args.load:
     model_dir = args.model_dir
-    recon_dir = base_path+'/'+args.dataset+'_recon_save_alpha' + str(args.alpha) '_beta' + str(args.beta) + '/'
+    recon_dir = base_path+'/'+args.dataset+'_recon_save_alpha' + str(args.alpha) + '_beta' + str(args.beta) + '/'
 
 else:
-    model_dir = base_path+'/'+args.dataset+'_model_save_alpha' + str(args.alpha) '_beta' + str(args.beta) + '/'
-    recon_dir = base_path+'/'+args.dataset+'_recon_save_alpha' + str(args.alpha) '_beta' + str(args.beta) + '/'
+    model_dir = base_path+'/'+args.dataset+'_model_save_alpha' + str(args.alpha) + '_beta' + str(args.beta) + '/'
+    recon_dir = base_path+'/'+args.dataset+'_recon_save_alpha' + str(args.alpha) + '_beta' + str(args.beta) + '/'
 
 if not os.path.exists(model_dir):
     os.makedirs(model_dir)
@@ -292,16 +280,16 @@ else:
     with open(model_dir+'train_TWRvae_loss.txt', 'w') as f:
         f.write("ep \t recon_loss \t div_loss \t acc \t nll_loss \t ppl \n")
     with open(recon_dir+'test_TWRvae_loss.txt', 'w') as f:
-        f.write("ep \t recon_loss \t div_loss \t NLL \t PPL \t MI \n")
+        f.write("ep \t recon_loss \t div_loss \t NLL \t PPL \n")
 
 
     for ep in tqdm(range(ep+1, args.epochs+1)):
-        recon_loss, var_loss, acc, nll_loss, ppl = train(dataloader_train, ep, alpha)
+        recon_loss, var_loss, acc, nll_loss, ppl = train(dataloader_train, ep, alpha,beta)
         history.append(f"{ep}\t{recon_loss}\t{var_loss}\t{acc}\t{nll_loss}\t{ppl}")
         with open(model_dir+'train_TWRvae_loss.txt', 'w') as f:
             f.write("\n".join(history))
       
-        test_ppl = reconstruction(dataloader_test, ep, alpha)
+        test_ppl = reconstruction(dataloader_test, ep, alpha, beta)
 
         if args.save and eval_ppl < Best_ppl:
             Best_ppl = eval_ppl
