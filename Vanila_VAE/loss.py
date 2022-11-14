@@ -14,10 +14,10 @@ from torch.nn import functional as F
 
 class Alpha_Family():
     def __init__(self, post_mu, post_logvar, prior_mu=None, prior_logvar=None):
-        self.post_mu = post_mu
-        self.post_logvar = post_logvar
-        self.prior_mu = torch.zeros_like(post_mu) if prior_mu is None else prior_mu
-        self.prior_logvar = torch.zeros_like(post_logvar) if prior_logvar is None else prior_logvar
+        self.post_mu = torch.tensor(post_mu)
+        self.post_logvar = torch.tensor(post_logvar)
+        self.prior_mu = torch.zeros_like(post_mu) if prior_mu is None else torch.tensor(prior_mu)
+        self.prior_logvar = torch.zeros_like(post_logvar) if prior_logvar is None else torch.tensor(prior_logvar)
         self.post_var = self.post_logvar.exp()
         self.prior_var = self.prior_logvar.exp()
 
@@ -33,8 +33,8 @@ class Alpha_Family():
             sq_term = (self.post_var + mu_square) / self.prior_var
             kl_div = -0.5 * torch.mean(logvar_diff + 1.0 - sq_term)
         return kl_div
-    
-    
+
+
     def alpha_divergence(self, alpha):
         '''
         Generalized alpha divergence
@@ -59,10 +59,9 @@ class Alpha_Family():
             const_alpha = 1 / (alpha * (1-alpha))
             prod_const = 0.5 * ((1-alpha) * self.post_logvar + alpha * self.prior_logvar - var_denom.log())
             exp_term = -0.5 * alpha * (1-alpha) * (self.prior_mu - self.post_mu).pow(2) / var_denom
-             
-            log_prodterm = torch.sum(prod_const + exp_term)
+            log_prodterm = torch.sum(prod_const + exp_term, dim=2) # zdim sum!
             
-            alpha_div = const_alpha * (1 - log_prodterm.exp())
+            alpha_div = torch.mean(const_alpha * (1 - log_prodterm.exp())) # batch, sen mean
             
             return alpha_div
     
@@ -74,6 +73,3 @@ class Alpha_Family():
         exp_renyi = 1 + alpha * (alpha - 1 ) * self.alpha_divergence(alpha)
 
         return exp_renyi.log() / (alpha - 1)
-
-
-
