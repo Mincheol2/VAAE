@@ -49,7 +49,7 @@ python main.py -dt ptb --alpha 1.0 --beta 1.0 #Default KL Div
 - This model generates both train_loss.txt and **test_loss.txt**
 
 
-- Noticeable results(*Need more experiments with different settings.*)
+### Noticeable results(*Need more experiments with different settings.*)
 
 1) reversed KL(alpha = 0) << alpha div // ptb, epoch = 150 (in terms of stability)
 
