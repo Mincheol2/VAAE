@@ -59,3 +59,8 @@ python main.py -dt ptb --alpha 1.0 --beta 1.0 #Default KL Div
 
 ![image](https://user-images.githubusercontent.com/43122330/201835644-d2e968b8-a084-4068-9b09-9625e6bf740b.png)
  
+3) alpha 0.5 ~ 0.7 are not so good..
+
+![image](https://user-images.githubusercontent.com/43122330/201836137-3ad3e2d8-ef76-4edf-9f22-e148878b58ce.png)
+
+![image](https://user-images.githubusercontent.com/43122330/201836252-9d2428ed-4664-4d1e-a301-3ffb1a3056e3.png)
