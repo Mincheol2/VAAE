@@ -6,7 +6,7 @@ from torch.nn import functional as F
 import random
 import math
 import numpy as np
-from loss import Alpha_Family
+from loss import *
 
 
 
@@ -117,9 +117,17 @@ class Encoder(nn.Module):
 
         return  z, mu_, logvar_, self.get_sen_len(src)
 
-    def loss(self, mu, logvar, alpha, beta):
-        Alpha_div = Alpha_Family(mu, logvar)
-        div_loss = Alpha_div.alpha_divergence(alpha)
+    def loss(self, mu, logvar, prior_mu, prior_logvar, alpha, beta, df):
+        # Alpha div
+        if df == 0:
+            Alpha_div = Alpha_Family(mu, logvar, prior_mu, prior_logvar)
+            div_loss = Alpha_div.alpha_divergence(alpha)
+            
+        # Gamma div
+        else:
+            Gamma_div = Gamma_Family(mu, logvar, prior_mu, prior_logvar)
+            div_loss = Gamma_div.gamma_divergence(df)
+        
         return div_loss * beta
 
     def log_sum_exp(self, value, dim=None, keepdim=False):
