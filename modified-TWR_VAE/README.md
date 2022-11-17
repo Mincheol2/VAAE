@@ -26,7 +26,7 @@ python main.py -dt ptb --alpha 1.0 --beta 1.0 #Default KL Div
 
 --df : Paramter for gamma-divergence. (Default = 0)
 
-If you test gamma-divergence, use **df** instead. 
+If you test gamma-divergence, use positive-valued **df** instead. 
 
 ```
 python main.py -dt ptb --beta 1.0 --df 1 #Gamma Div
