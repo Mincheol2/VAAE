@@ -11,22 +11,29 @@ from loss import Alpha_Family
 
 
 class Encoder(nn.Module):
-    def __init__(self, input_dim, hid_dim1, hid_dim2, z_dim):
+    def __init__(self, input_dim, hid_dim1, hid_dim2, z_dim,df=0):
         super(Encoder, self).__init__()
 
         self.input_dim = input_dim
         self.hid_dim1 = hid_dim1
         self.hid_dim2 = hid_dim2
         self.z_dim = z_dim
-
+        self.df = df
+        
         self.fc1 = nn.Linear(self.input_dim, self.hid_dim1)
         self.fc2 = nn.Linear(self.hid_dim1, self.hid_dim2)
         self.latent_mu = nn.Linear(self.hid_dim2, self.z_dim)
         self.latent_var = nn.Linear(self.hid_dim2, self.z_dim)
 
     def reparameterize(self, mu, logvar):
+        if self.df == 0:
+            eps = torch.randn_like(std) # Normal dist
+        else:
+            Tdist = torch.distributions.studentT.StudentT(self.df)
+            eps = Tdist.sample() # Student T dist
+            
         std = torch.exp(0.5 * logvar)
-        eps = torch.randn_like(std)
+        
         return mu + std * eps
 
     def forward(self, x):
@@ -40,9 +47,17 @@ class Encoder(nn.Module):
 
         return  z, mu, logvar
 
-    def loss(self, mu, logvar, alpha, beta):
-        Alpha_div = Alpha_Family(mu, logvar)
-        div_loss = Alpha_div.alpha_divergence(alpha)
+    def loss(self, mu, logvar, prior_mu, prior_logvar, alpha, beta, df):
+        # Alpha div
+        if df == 0:
+            Alpha_div = Alpha_Family(mu, logvar, prior_mu, prior_logvar)
+            div_loss = Alpha_div.alpha_divergence(alpha)
+            
+        # Gamma div
+        else:
+            Gamma_div = Gamma_Family(mu, logvar, prior_mu, prior_logvar)
+            div_loss = Gamma_div.gamma_divergence(df)
+        
         return div_loss * beta
 
     def log_sum_exp(self, value, dim=None, keepdim=False):

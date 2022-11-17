@@ -17,9 +17,15 @@ from torch.utils.tensorboard import SummaryWriter
 
 parser = argparse.ArgumentParser(description='vanila VAE')
 parser.add_argument('--alpha', type=float, default=1.0,
-                    help='alpha div parameter (default: 1)')
+                    help='alpha div parameter (default: 1.0)')
 parser.add_argument('--beta', type=float, default=1.0,
-                    help='div weight parameter (default: 1)')
+                    help='div weight parameter (default: 1.0)')
+parser.add_argument('--df', type=float, default=0.0,
+                    help='gamma div parameter (default: 0)')
+parser.add_argument('--prior_mu', type=float, default=0,
+                    help='prior_mu')
+parser.add_argument('--prior_logvar', type=float, default=0,
+                    help='prior_logvar')
 parser.add_argument('--seed', type=int, default=999,
                     help='set seed number (default: 999)')
 parser.add_argument('--batch_size', type=int, default=64,
@@ -75,7 +81,7 @@ if not os.path.exists(recon_dir):
 ## For tensorboard ##
 writer = SummaryWriter(model_dir + 'Tensorboard_results')
 
-def train(train_loader, encoder, decoder, opt, epoch, alpha, beta):
+def train(train_loader, encoder, decoder, opt, epoch, prior_mu, prior_logvar, alpha, beta, df):
     encoder.train()
     decoder.train()
     total_loss = []
@@ -83,8 +89,7 @@ def train(train_loader, encoder, decoder, opt, epoch, alpha, beta):
         data = data.to(DEVICE)
         opt.zero_grad()
         z, mu, logvar = encoder(data)
-        div_loss = encoder.loss(mu, logvar, alpha, beta)
-
+        div_loss = encoder.loss(mu, logvar, prior_mu, prior_logvar, alpha, beta, df)
         recon_img = decoder(z)
         recon_loss = decoder.loss(recon_img, data, input_dim)
 
@@ -106,7 +111,7 @@ def train(train_loader, encoder, decoder, opt, epoch, alpha, beta):
     return total_loss
 
 
-def reconstruction(test_loader, encoder, decoder, ep, alpha, beta):
+def reconstruction(test_loader, encoder, decoder, ep, prior_mu, prior_logvar, alpha, beta, df=0):
     encoder.eval()
     decoder.eval()
     vectors = []
@@ -116,8 +121,8 @@ def reconstruction(test_loader, encoder, decoder, ep, alpha, beta):
 
             data = data.to(DEVICE)
             z, mu, logvar = encoder(data)
-            div_loss = encoder.loss(mu, logvar, alpha, beta)
-
+                        
+            div_loss = encoder.loss(mu, logvar, prior_mu, prior_logvar, alpha, beta, df)
             recon_img = decoder(z)
             recon_loss = decoder.loss(recon_img, data, input_dim)
 
@@ -202,7 +207,7 @@ if args.load:
 else:
 
     for epoch in tqdm(range(0, args.epochs)):
-        train(trainloader, encoder, decoder, opt, epoch, alpha, beta)
-        reconstruction(testloader, encoder, decoder, epoch, alpha, beta)
+        train(trainloader, encoder, decoder, opt, epoch, args.prior_mu, args.prior_logvar, alpha, beta, df)
+        reconstruction(testloader, encoder, decoder, epoch, args.prior_mu, args.prior_logvar,alpha, beta, df)
     writer.close()
 

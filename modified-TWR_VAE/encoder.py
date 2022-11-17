@@ -11,7 +11,7 @@ from loss import *
 
 
 class Encoder(nn.Module):
-    def __init__(self, input_dim, emb_dim, hid_dim, z_dim, n_layers, dropout, beta, bidirectional=False, rnn_type='lstm', partial='last75', z_mode=None, partial_lag=None):
+    def __init__(self, input_dim, emb_dim, hid_dim, z_dim, n_layers, dropout, bidirectional=False, rnn_type='lstm', partial='last75', z_mode=None, partial_lag=None, df=0):
         super(Encoder, self).__init__()
         self.input_dim = input_dim
         self.emb_dim = emb_dim
@@ -24,9 +24,7 @@ class Encoder(nn.Module):
         self.partial_lag = partial_lag
         self.z_mode = z_mode
         self.layer_dim = (n_layers*2 if bidirectional else n_layers)*hid_dim
-        
-        # Div loss weight
-        self.beta = beta
+        self.df = df
 
         self.embedding = nn.Embedding(input_dim, emb_dim, padding_idx=0)
         if self.rnn_type == 'lstm':
@@ -45,11 +43,16 @@ class Encoder(nn.Module):
         
 
     def reparameterize(self, mu, logvar, mi=False):
+        if self.df == 0:
+            eps = torch.randn_like(std) # Normal dist
+        else:
+            Tdist = torch.distributions.studentT.StudentT(self.df)
+            eps = Tdist.sample() # Student T dist
         if not self.training and not mi:
             return mu
         elif not self.training and mi:
             std = torch.exp(0.5*logvar)
-            eps = torch.randn_like(std)
+            
             return mu, mu + eps*std
         elif self.training:
             std = torch.exp(0.5*logvar)

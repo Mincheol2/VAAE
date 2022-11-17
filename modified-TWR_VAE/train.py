@@ -22,7 +22,7 @@ def sentence_acc(prod, target):
     correct = torch.eq(prod, target).to(dtype=torch.float).sum()
     return correct.item()
 
-def train(encoder, decoder, opt, device, corpus, ep, prior_mu, prior_logvar, alpha, beta, gamma=0):
+def train(encoder, decoder, opt, device, corpus, ep, prior_mu, prior_logvar, alpha, beta, df=0):
     
     encoder.train()
     decoder.train()
@@ -41,7 +41,7 @@ def train(encoder, decoder, opt, device, corpus, ep, prior_mu, prior_logvar, alp
         z, mu, logvar, sen_len = encoder(sen)
 
         prod = decoder(z, sen)
-        kl_loss = encoder.loss(mu, logvar, prior_mu, prior_logvar, alpha, beta, gamma)
+        kl_loss = encoder.loss(mu, logvar, prior_mu, prior_logvar, alpha, beta, df)
         recon_loss = decoder.loss(prod, sen, sen_len)
         
         ((kl_loss+recon_loss)*1).backward()
@@ -64,7 +64,7 @@ def train(encoder, decoder, opt, device, corpus, ep, prior_mu, prior_logvar, alp
 
 
 
-def reconstruction(encoder, decoder, opt, device, corpus, raw_corpus, recon_dir, ep, prior_mu, prior_logvar, alpha, beta, gamma=0):
+def reconstruction(encoder, decoder, opt, device, corpus, raw_corpus, recon_dir, ep, prior_mu, prior_logvar, alpha, beta, df=0):
     encoder.eval()
     decoder.eval()
     out_org = []
@@ -83,7 +83,7 @@ def reconstruction(encoder, decoder, opt, device, corpus, raw_corpus, recon_dir,
             z, mu, logvar, sen_len = encoder(sen)
         
             recon_mu = decoder(z, sen)
-            kl_loss = encoder.loss(mu, logvar, prior_mu, prior_logvar, alpha, beta, gamma)
+            kl_loss = encoder.loss(mu, logvar, prior_mu, prior_logvar, alpha, beta, df)
             recon_loss = decoder.loss(recon_mu, sen, sen_len)
             
             sens_mu = recon_mu.argmax(dim=2)

@@ -4,13 +4,50 @@ from torch import nn
 from torch.nn import functional as F
 
 '''
-    Default option assumes that
-    prior p ~ N(0,I) and posterior q ~ N(mu, var). (Note that var is diagonal.)
-    For numerical stablity, we use an argument 'logvar' instead of var.
+    Gamma divergence assumes that
+    prior p ~ T_{df}(0,I) and posterior q ~ T_{df}(mu, var).
+    (Student's T distribution)
+    * Note that var is diagonal.
     
+    For numerical stablity, we use an argument 'logvar' instead of var.
     You can change prior's mean and variance by modifying the argument 'prior_mu' and 'prior_logvar'.
 '''
+class Gamma_Family():
+    def __init__(self, post_mu, post_logvar, df, prior_mu=None, prior_logvar=None):
+        self.post_mu = torch.tensor(post_mu)
+        self.post_logvar = torch.tensor(post_logvar)
+        self.df = df
+        
+        self.prior_mu = torch.zeros_like(post_mu) if prior_mu is None else torch.tensor(prior_mu)
+        self.prior_logvar = torch.zeros_like(post_logvar) if prior_logvar is None else torch.tensor(prior_logvar)
+        self.post_var = self.post_logvar.exp()
+        self.prior_var = self.prior_logvar.exp()
 
+    def gamma_divergence(self, df):
+        '''
+        Generalized gamma divergence.
+        paramter : df > 0
+        cf) Instead of gamma, we use df(degree of freedom) as a paramter. (gamma = -2 /(1+df))
+        '''
+        # Check the well-definedness
+        if df <= 0:
+            raise Exception(f'the degree of freedom is not positive. Divergence is not well-defined.')
+
+
+        log_det_ratio = (df + 1) / 2*(df - 1) * (torch.sum(self.prior_logvar,dim=2) - torch.sum(self.post_logvar,dim=2))
+        log_term = (df + 1)/2 * torch.log(1 + 1/df * torch.sum( (self.post_var + (self.prior_mu-self.post_mu).pow(2)) / self.prior_var ,dim=2) )
+        
+        gamma_div = torch.mean(log_det_ratio + log_term) # Batch mean
+        return gamma_div
+    
+
+
+'''
+    Alpha divergence assumes that
+    prior p ~ N(0,I) and posterior q ~ N(mu, var). (Note that var is diagonal.)
+    For numerical stablity, we use an argument 'logvar' instead of var.
+    You can change prior's mean and variance by modifying the argument 'prior_mu' and 'prior_logvar'.
+'''
 
 class Alpha_Family():
     def __init__(self, post_mu, post_logvar, prior_mu=None, prior_logvar=None):
