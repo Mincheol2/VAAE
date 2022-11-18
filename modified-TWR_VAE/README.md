@@ -64,7 +64,7 @@ else:
 
 - This model generates both train_loss.txt and **test_loss.txt**
 
-- You can plot 
+- You can see the PPL plot and reconstructed sentence in TWR_VAE_colab.ipynb
 
 
 ### Noticeable results(*Need more experiments with different settings.*)
