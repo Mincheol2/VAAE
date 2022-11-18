@@ -1,10 +1,17 @@
 # VAAE : Image Dataset
 
-# Modified-TWR-VAE
-
 This is the modification of Vanila-VAE for my DL projects.
 
 I contruct original VAE model (w\ MLP layer) and add new codes to help my projects.
+
+## Requirements
+
+*torchmetrics* is used for caculating SSIM score. There is no any other specific package.
+
+To install this package,
+```
+pip install torchmetrics 
+```
 
 
 ## Usage
