@@ -43,21 +43,20 @@ class Encoder(nn.Module):
         
 
     def reparameterize(self, mu, logvar, mi=False):
-        if self.df == 0:
-            eps = torch.randn_like(std) # Normal dist
-        else:
-            Tdist = torch.distributions.studentT.StudentT(self.df)
-            eps = Tdist.sample() # Student T dist
         if not self.training and not mi:
             return mu
-        elif not self.training and mi:
+        else:
             std = torch.exp(0.5*logvar)
-            
-            return mu, mu + eps*std
-        elif self.training:
-            std = torch.exp(0.5*logvar)
-            eps = torch.randn_like(std)
-            return mu + eps*std
+            if self.df == 0:
+                eps = torch.randn_like(std) # Normal dist
+            else:
+                Tdist = torch.distributions.studentT.StudentT(self.df)
+                eps = Tdist.sample() # Student T dist
+
+            if not self.training and mi:
+                return mu, mu + eps*std
+            else:
+                return mu + eps*std
 
     def get_sen_len(self, sens):
         length = torch.sum(sens > 0, dim=0)
