@@ -26,16 +26,17 @@ class Gamma_Family():
     def gamma_divergence(self, df):
         '''
         Generalized gamma divergence.
-        paramter : df > 0
+        paramter : df > 2 
+        (This is because the variance of T dist : df/(df-2), v>0)
         cf) Instead of gamma, we use df(degree of freedom) as a paramter. (gamma = -2 /(1+df))
         '''
         # Check the well-definedness
-        if df <= 0:
+        if df <= 2:
             raise Exception(f'the degree of freedom is not positive. Divergence is not well-defined.')
 
 
-        log_det_ratio = (df + 1) / 2*(df - 1) * (torch.sum(self.prior_logvar,dim=2) - torch.sum(self.post_logvar,dim=2))
-        log_term = (df + 1)/2 * torch.log(1 + 1/df * torch.sum( (self.post_var + (self.prior_mu-self.post_mu).pow(2)) / self.prior_var ,dim=2) )
+        log_det_ratio = (df + 1) / 2*(df - 1) * (torch.sum(self.prior_logvar,dim=1) - torch.sum(self.post_logvar,dim=1))
+        log_term = (df + 1)/2 * torch.log(1 + 1/df * torch.sum( (self.post_var + (self.prior_mu-self.post_mu).pow(2)) / self.prior_var,dim=1))
         
         gamma_div = torch.mean(log_det_ratio + log_term) # Batch mean
         return gamma_div
@@ -96,8 +97,8 @@ class Alpha_Family():
             const_alpha = 1 / (alpha * (1-alpha))
             prod_const = 0.5 * ((1-alpha) * self.post_logvar + alpha * self.prior_logvar - var_denom.log())
             exp_term = -0.5 * alpha * (1-alpha) * (self.prior_mu - self.post_mu).pow(2) / var_denom
-            log_prodterm = torch.sum(prod_const + exp_term, dim=2) # zdim sum!
             
+            log_prodterm = torch.sum(prod_const + exp_term,dim=1) # 
             alpha_div = torch.mean(const_alpha * (1 - log_prodterm.exp())) # batch, sen mean
             
             return alpha_div
