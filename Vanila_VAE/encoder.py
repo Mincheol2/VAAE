@@ -6,7 +6,7 @@ from torch.nn import functional as F
 import random
 import math
 import numpy as np
-from loss import Alpha_Family
+from loss import *
 
 
 
@@ -26,14 +26,14 @@ class Encoder(nn.Module):
         self.latent_var = nn.Linear(self.hid_dim2, self.z_dim)
 
     def reparameterize(self, mu, logvar):
-        eps = 0 # init
+        std = torch.exp(0.5 * logvar)
         if self.df == 0:
             eps = torch.randn_like(std) # Normal dist
         else:
             Tdist = torch.distributions.studentT.StudentT(self.df)
             eps = Tdist.sample() # Student T dist
             
-        std = torch.exp(0.5 * logvar)
+        
         
         return mu + std * eps
 

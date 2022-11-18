@@ -14,6 +14,10 @@ from encoder import Encoder
 from decoder import Decoder
 from tqdm import tqdm
 from torch.utils.tensorboard import SummaryWriter
+import math
+import numpy as np
+import cv2
+
 
 parser = argparse.ArgumentParser(description='vanila VAE')
 parser.add_argument('--alpha', type=float, default=1.0,
@@ -66,21 +70,24 @@ torch.backends.cudnn.deterministic = True
 USE_CUDA = torch.cuda.is_available()
 DEVICE = torch.device("cuda" if USE_CUDA else "cpu")
 
+alpha = args.alpha
+beta = args.beta
+df = args.df
+
+print(f'Current alpha : {alpha}')
+print(f'Current beta : {beta}')
+print(f'Current df : {df}')
+
 if args.load:
     model_dir = args.model_dir
-    recon_dir = './'+args.dataset+'_recon_save_alpha' + str(args.alpha) + '_beta' + str(args.beta) + '/'
 else:
-    model_dir = './'+args.dataset+'_model_save_alpha' + str(args.alpha) + '_beta' + str(args.beta) + '/'
-    recon_dir = './'+args.dataset+'_recon_save_alpha' + str(args.alpha) + '_beta' + str(args.beta) + '/'
-
+    model_dir = './'+args.dataset+ f'_model_save_alpha{alpha}_beta{beta}_df{df}/'
 if not os.path.exists(model_dir):
     os.makedirs(model_dir)
-if not os.path.exists(recon_dir):
-    os.makedirs(recon_dir)
 
 ## For tensorboard ##
 writer = SummaryWriter(model_dir + 'Tensorboard_results')
-
+from skimage.metrics import structural_similarity as ssim
 def train(train_loader, encoder, decoder, opt, epoch, prior_mu, prior_logvar, alpha, beta, df):
     encoder.train()
     decoder.train()
@@ -94,6 +101,14 @@ def train(train_loader, encoder, decoder, opt, epoch, prior_mu, prior_logvar, al
         recon_loss = decoder.loss(recon_img, data, input_dim)
 
         current_loss = div_loss + recon_loss
+
+        ## Caculate SSIM ##
+        img1 = data.cpu()
+        img2 = recon_img.cpu().view_as(data)
+        ssim = StructuralSimilarityIndexMeasure()
+        ssim_train = ssim(img1, img2)
+        ##
+        writer.add_scalar("Train/SSIM", ssim_train.item(), batch_idx + epoch * (len(train_loader.dataset)/args.batch_size) )
         writer.add_scalar("Train/Reconstruction Error", recon_loss.item(), batch_idx + epoch * (len(train_loader.dataset)/args.batch_size) )
         writer.add_scalar("Train/KL-Divergence", div_loss.item(), batch_idx + epoch * (len(train_loader.dataset)/args.batch_size) )
         writer.add_scalar("Train/Total Loss" , current_loss.item(), batch_idx + epoch * (len(train_loader.dataset)/args.batch_size) )
@@ -128,6 +143,13 @@ def reconstruction(test_loader, encoder, decoder, ep, prior_mu, prior_logvar, al
 
             current_loss = div_loss + recon_loss
 
+            ## Caculate SSIM ##
+            img1 = data.cpu()
+            img2 = recon_img.cpu().view_as(data)
+            ssim = StructuralSimilarityIndexMeasure()
+            ssim_test = ssim(img1, img2)
+            ##
+            writer.add_scalar("Test/SSIM", ssim_test.item(), batch_idx + epoch * (len(test_loader.dataset)/args.batch_size) )
             writer.add_scalar("Test/Reconstruction Error", recon_loss.item(), batch_idx + epoch * (len(test_loader.dataset)/args.batch_size) )
             writer.add_scalar("Test/KL-Divergence", div_loss.item(), batch_idx + epoch * (len(test_loader.dataset)/args.batch_size) )
             writer.add_scalar("Test/Total Loss" , current_loss.item(), batch_idx + epoch * (len(test_loader.dataset)/args.batch_size) )
@@ -184,12 +206,6 @@ lr = args.lr
 opt = optim.Adam(list(encoder.parameters()) +
                  list(decoder.parameters()), lr=lr, eps=1e-6, weight_decay=1e-5)
 
-
-alpha = args.alpha
-beta = args.alpha
-
-print(f'Current alpha : {alpha}')
-print(f'Current beta : {beta}')
 
 
 
