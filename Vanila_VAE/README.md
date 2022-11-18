@@ -48,7 +48,7 @@ python main.py -dt ptb --epochs 50 --beta 1.0 --df 3.0 #Gamma Div
 
 ## Encoder.py : Reparametrize trick with normal and T distribution
 
-- If you use gamma divergence (i.e. df > 0), prior and posterior are **student T distribution**, not normal.
+- If you use gamma divergence (i.e. df > 2), prior and posterior are **student T distribution**, not normal.
 
 - Ohter divergence use normal distribution, like the original model.
 
