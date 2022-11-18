@@ -1,4 +1,4 @@
-# Modified-TWR-VAE
+# Modified-TWR-VAE (VAAE for text dataset)
 
 This is the modification of TWR-VAE(Timestep-Wise Regularization Variational AutoEncooder) for my NLP / DL projects.
 
