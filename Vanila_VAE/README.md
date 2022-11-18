@@ -35,7 +35,7 @@ python main.py -dt ptb --epochs 50 --alpha 1.0 --beta 1.0 #Default KL Div
 If you test gamma-divergence, use positive-valued **df** instead. 
 
 ```
-python main.py -dt ptb --epochs 50 --beta 1.0 --df 1 #Gamma Div
+python main.py -dt ptb --epochs 50 --beta 1.0 --df 3.0 #Gamma Div
 
 ```
 
