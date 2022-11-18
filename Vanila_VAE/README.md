@@ -16,7 +16,7 @@ pip install torchmetrics
 
 ## Usage
 
-- For our experiment, you change the below three arguments.
+- For our experiments, you just change the below four arguments.
 
 --alpha : Parameter for alpha-divergence. (Default = 1.0)
 
@@ -24,16 +24,18 @@ pip install torchmetrics
 
 --df : Paramter for gamma-divergence. (Default = 0)
 
+--epochs : Paramter for gamma-divergence. (Default = 100)
+
 To train the model,
 
 ```
-python main.py -dt ptb --alpha 1.0 --beta 1.0 #Default KL Div
+python main.py -dt ptb --epochs 50 --alpha 1.0 --beta 1.0 #Default KL Div
 ```
 
 If you test gamma-divergence, use positive-valued **df** instead. 
 
 ```
-python main.py -dt ptb --beta 1.0 --df 1 #Gamma Div
+python main.py -dt ptb --epochs 50 --beta 1.0 --df 1 #Gamma Div
 
 ```
 
