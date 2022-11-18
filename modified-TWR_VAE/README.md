@@ -37,10 +37,24 @@ python main.py -dt ptb --beta 1.0 --df 1 #Gamma Div
 
 
 
-## Loss.py : generalized alpha-divergence module
+## Loss.py : generalized gamma and alpha-divergence module
 
 - We can use generalized alpha-divergence. (For details, see that file.)
 
+
+## Encoder.py : Reparametrize trick with normal and T distribution
+
+- If you use gamma divergence (i.e. df > 0), prior and posterior are **student T distribution**, not normal.
+
+- Ohter divergence use normal distribution, like the original model.
+
+```
+if self.df == 0:
+    eps = torch.randn_like(std) # Normal dist
+else:
+    Tdist = torch.distributions.studentT.StudentT(self.df)
+    eps = Tdist.sample() # Student T dist
+```
 
 ### Result (& generate loss.txt)
 
@@ -48,10 +62,9 @@ python main.py -dt ptb --beta 1.0 --df 1 #Gamma Div
 
 <img width="1000" alt="image" src="https://user-images.githubusercontent.com/43122330/200512800-a28aa7b4-1293-4981-9333-206ea7e4d833.png">
 
-
-- I think we don't need to use 'valid' set in the original model. So we use only train/test set.
-
 - This model generates both train_loss.txt and **test_loss.txt**
+
+- You can plot 
 
 
 ### Noticeable results(*Need more experiments with different settings.*)
