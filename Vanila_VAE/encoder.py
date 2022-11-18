@@ -26,6 +26,7 @@ class Encoder(nn.Module):
         self.latent_var = nn.Linear(self.hid_dim2, self.z_dim)
 
     def reparameterize(self, mu, logvar):
+        eps = 0 # init
         if self.df == 0:
             eps = torch.randn_like(std) # Normal dist
         else:
