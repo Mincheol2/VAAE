@@ -22,15 +22,16 @@ python main.py -dt ptb --alpha 1.0 --beta 1.0 #Default KL Div
 
 --alpha : Parameter for alpha-divergence. (Default = 1.0)
 
---beta : Weight for alpha-divergence. ( Default = 1.0)
+--beta : Weight for alpha-divergence. (Default = 1.0)
 
---df : Paramter for gamma-divergence. (Default = 0)
+--df : Paramter for gamma-divergence. (Default = 0, it means gamma divergence is not used)
 
-If you test gamma-divergence, use positive-valued **df** instead. 
+If you test gamma-divergence, use **df > 2**. (Because the variance of T distribution exists when df > 2)
 
 ```
-python main.py -dt ptb --beta 1.0 --df 1 #Gamma Div
+python main.py -dt ptb --beta 1.0 --df 3 #Gamma Div
 ```
+
 ## Run the model in Colab & Visualization
 
 - See [TWR_VAE_colab.ipynb](https://github.com/Mincheol2/modified-TWR_VAE/blob/main/TWR_VAE_colab.ipynb)
