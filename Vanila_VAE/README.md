@@ -32,7 +32,9 @@ python main.py -dt ptb --beta 1.0 --df 1 #Gamma Div
 
 ## Loss.py : generalized gamma and alpha-divergence module
 
-- We can use generalized alpha-divergence. (For details, see that file.)
+- We can use generalized alpha divergence and gamma divergence. (For details, see that file.)
+
+- Compared to text data, please consider the difference of dimension. (image = 2, text = 3)
 
 
 ## Encoder.py : Reparametrize trick with normal and T distribution
