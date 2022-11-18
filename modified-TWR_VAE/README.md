@@ -47,7 +47,7 @@ python main.py -dt ptb --beta 1.0 --df 3 #Gamma Div
 
 - If you use gamma divergence (i.e. df > 2), prior and posterior are **student T distribution**, not normal.
 
-- Ohter divergence use normal distribution, like the original model.
+- Ohter divergences use normal distribution, like the original model.
 
 ```
 if self.df == 0:
