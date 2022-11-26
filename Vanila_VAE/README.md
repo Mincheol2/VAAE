@@ -29,13 +29,13 @@ pip install torchmetrics
 To train the model,
 
 ```
-python main.py -dt ptb --epochs 50 --alpha 1.0 --beta 1.0 #Default KL Div
+python main.py -dt mnist --epochs 50 --alpha 1.0 --beta 1.0 #Default KL Div
 ```
 
 If you test gamma-divergence, use positive-valued **df** instead. 
 
 ```
-python main.py -dt ptb --epochs 50 --beta 1.0 --df 3.0 #Gamma Div
+python main.py -dt mnist --epochs 50 --beta 1.0 --df 3.0 #Gamma Div
 
 ```
 
@@ -69,7 +69,7 @@ TBU
 
 https://github.com/Po-Hsun-Su/pytorch-ssim
 
-### MNIST-C
+### MNIST-C: A Robustness Benchmark for Computer Vision
 
 Paper : https://arxiv.org/abs/1906.02337
 
