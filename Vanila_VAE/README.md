@@ -62,3 +62,15 @@ else:
 
 ### Result (MNIST)
 TBU
+
+## Reference
+
+### Pytorch-ssim
+
+https://github.com/Po-Hsun-Su/pytorch-ssim
+
+### MNIST-C
+
+Paper : https://arxiv.org/abs/1906.02337
+
+Repo : https://github.com/google-research/mnist-c
