@@ -38,7 +38,7 @@ The orinal paper is [below](#reference)
 
 --epochs : Paramter for gamma-divergence. (Default = 100)
 
-To train the model,
+To train the model, (Default : MNIST)
 
 ```
 python main.py --epochs 50 --alpha 1.0 --beta 1.0 #Default KL Div
@@ -53,7 +53,7 @@ python main.py--epochs 50 --beta 1.0 --df 3.0 #Gamma Div
 If you want to use another dataset(MNIST-C), use the argument --dataset
 
 ```
-python main.py --dataset motion_blur --epochs 50 --beta 1.0 --df 3.0 #Gamma Div
+python main.py --dataset glass_blur --epochs 50 --beta 1.0 --df 3.0 #Gamma Div
 ```
 
 
