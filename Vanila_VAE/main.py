@@ -5,18 +5,17 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 import torchvision
 import torchvision.transforms as transforms
-from torch.nn import functional as F
 import random
 import os
 from util import *
+from mnistc_dataset import *
 import numpy as np
 from encoder import Encoder
 from decoder import Decoder
 from tqdm import tqdm
 from torch.utils.tensorboard import SummaryWriter
-import math
 import numpy as np
-import cv2
+#import cv2
 
 
 parser = argparse.ArgumentParser(description='vanila VAE')
@@ -34,10 +33,6 @@ parser.add_argument('--seed', type=int, default=999,
                     help='set seed number (default: 999)')
 parser.add_argument('--batch_size', type=int, default=64,
                     help='input batch size for training (default: 64)')
-parser.add_argument('--hidden_size1', type=int, default=512,
-                    help='the first hidden size for training (default: 512)')
-parser.add_argument('--hidden_size2', type=int, default=256,
-                    help='the second hidden size for training (default: 256)')
 parser.add_argument('--zdim',  type=int, default=32,
                     help='the z size for training (default: 512)')
 parser.add_argument('--epochs', type=int, default=100,
@@ -84,7 +79,6 @@ else:
     model_dir = './'+args.dataset+ f'_model_save_alpha{alpha}_beta{beta}_df{df}/'
 if not os.path.exists(model_dir):
     os.makedirs(model_dir)
-
 ## For tensorboard ##
 writer = SummaryWriter(model_dir + 'Tensorboard_results')
 from skimage.metrics import structural_similarity as ssim
@@ -99,16 +93,8 @@ def train(train_loader, encoder, decoder, opt, epoch, prior_mu, prior_logvar, al
         div_loss = encoder.loss(mu, logvar, prior_mu, prior_logvar, alpha, beta, df)
         recon_img = decoder(z)
         recon_loss = decoder.loss(recon_img, data, input_dim)
-
         current_loss = div_loss + recon_loss
-
-        ## Caculate SSIM ##
-        img1 = data.cpu()
-        img2 = recon_img.cpu().view_as(data)
-        ssim = StructuralSimilarityIndexMeasure()
-        ssim_train = ssim(img1, img2)
-        ##
-        writer.add_scalar("Train/SSIM", ssim_train.item(), batch_idx + epoch * (len(train_loader.dataset)/args.batch_size) )
+        
         writer.add_scalar("Train/Reconstruction Error", recon_loss.item(), batch_idx + epoch * (len(train_loader.dataset)/args.batch_size) )
         writer.add_scalar("Train/KL-Divergence", div_loss.item(), batch_idx + epoch * (len(train_loader.dataset)/args.batch_size) )
         writer.add_scalar("Train/Total Loss" , current_loss.item(), batch_idx + epoch * (len(train_loader.dataset)/args.batch_size) )
@@ -123,7 +109,8 @@ def train(train_loader, encoder, decoder, opt, epoch, prior_mu, prior_logvar, al
                 epoch, batch_idx * len(data), len(train_loader.dataset),
                        100. * batch_idx / len(train_loader),
                        current_loss.item() / len(data)))
-    return total_loss
+        
+        return total_loss
 
 
 def reconstruction(test_loader, encoder, decoder, ep, prior_mu, prior_logvar, alpha, beta, df=0):
@@ -133,7 +120,6 @@ def reconstruction(test_loader, encoder, decoder, ep, prior_mu, prior_logvar, al
 
     for batch_idx, (data, labels) in enumerate(test_loader):
         with torch.no_grad():
-
             data = data.to(DEVICE)
             z, mu, logvar = encoder(data)
                         
@@ -154,12 +140,8 @@ def reconstruction(test_loader, encoder, decoder, ep, prior_mu, prior_logvar, al
             writer.add_scalar("Test/KL-Divergence", div_loss.item(), batch_idx + epoch * (len(test_loader.dataset)/args.batch_size) )
             writer.add_scalar("Test/Total Loss" , current_loss.item(), batch_idx + epoch * (len(test_loader.dataset)/args.batch_size) )
             
-            #temp = list(zip(labels.tolist(), mu.tolist()))
-
             recon_img = recon_img.view(-1, 1, image_size, image_size)
 
-            #for x in temp:
-            #    vectors.append(x)
 
             if batch_idx % 100 == 0:
                 print('Test Epoch: {} [{}/{} ({:.0f}%)]\t Loss: {:.4f}'.format(
@@ -171,37 +153,37 @@ def reconstruction(test_loader, encoder, decoder, ep, prior_mu, prior_logvar, al
             comparison = torch.cat([data[:n], recon_img.view(args.batch_size, 1, 28, 28)[:n]]) # (16, 1, 28, 28)
             grid = torchvision.utils.make_grid(comparison.cpu()) # (3, 62, 242)
             writer.add_image("Test image - Above: Real data, below: reconstruction data", grid, epoch)
-        #show_images(recon_img.cpu())
-        #img_name = recon_dir + "recon_imgs/" + str(batch_idx).zfill(3)
-        #torchvision.utils.save_image(recon_img, img_name)
+
     return
 
 
 
 
-# Loading trainset, testset and trainloader, testloader
 transformer = transforms.Compose([transforms.ToTensor()])
 
 if args.dataset == "mnist":
     trainset = torchvision.datasets.MNIST(root='./MNIST', train=True,
                                           download=True, transform=transformer)
-    trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, shuffle=True, num_workers=2)
     testset = torchvision.datasets.MNIST(root='./MNIST', train=False,
                                          download=True, transform=transformer)
-    testloader = torch.utils.data.DataLoader(testset, batch_size=args.batch_size, shuffle=True, num_workers=2)
-
 else:
-    pass
-    #TBD
+    MNISTC = MNISTC_Dataset()
 
+    # Train with MNISTC noisy data, and reconstruct MNIST data
+    trainset, _ = MNISTC.get_dataset(args.dataset)
+    testset = torchvision.datasets.MNIST(root='./MNIST', train=False, download=True, transform=transformer)
+
+
+trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, shuffle=True, num_workers=2)
+testloader = torch.utils.data.DataLoader(testset, batch_size=args.batch_size, shuffle=True, num_workers=2)
 
 
 
 image_size = 28
 input_dim = 784 # 28**2 : MNIST (I'll generalize this param for any dataset)
 
-encoder = Encoder(input_dim, args.hidden_size1, args.hidden_size2, args.zdim).to(DEVICE)
-decoder = Decoder(input_dim, args.hidden_size1, args.hidden_size2, args.zdim, device=DEVICE).to(DEVICE)
+encoder = Encoder(input_dim, args.zdim).to(DEVICE)
+decoder = Decoder(input_dim, args.zdim, device=DEVICE).to(DEVICE)
 lr = args.lr
 opt = optim.Adam(list(encoder.parameters()) +
                  list(decoder.parameters()), lr=lr, eps=1e-6, weight_decay=1e-5)

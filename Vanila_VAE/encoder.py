@@ -11,19 +11,17 @@ from loss import *
 
 
 class Encoder(nn.Module):
-    def __init__(self, input_dim, hid_dim1, hid_dim2, z_dim,df=0):
+    def __init__(self, input_dim, z_dim,df=0):
         super(Encoder, self).__init__()
 
         self.input_dim = input_dim
-        self.hid_dim1 = hid_dim1
-        self.hid_dim2 = hid_dim2
         self.z_dim = z_dim
         self.df = df
-        
-        self.fc1 = nn.Linear(self.input_dim, self.hid_dim1)
-        self.fc2 = nn.Linear(self.hid_dim1, self.hid_dim2)
-        self.latent_mu = nn.Linear(self.hid_dim2, self.z_dim)
-        self.latent_var = nn.Linear(self.hid_dim2, self.z_dim)
+
+        self.encConv1 = nn.Conv2d(1, 16, 5)
+        self.encConv2 = nn.Conv2d(16, 32, 5)
+        self.latent_mu = nn.Linear(32*20*20, self.z_dim)
+        self.latent_var = nn.Linear(32*20*20, self.z_dim)
 
     def reparameterize(self, mu, logvar):
         std = torch.exp(0.5 * logvar)
@@ -38,12 +36,11 @@ class Encoder(nn.Module):
         return mu + std * eps
 
     def forward(self, x):
-        flat_x = x.view(-1,self.input_dim)
-        hidden_state_1 = F.relu(self.fc1(flat_x))
-        hidden_state_2 = F.relu(self.fc2(hidden_state_1))
-
-        mu = self.latent_mu(hidden_state_2)
-        logvar = self.latent_var(hidden_state_2)
+        x = F.relu(self.encConv1(x))
+        x = F.relu(self.encConv2(x))
+        x = x.view(-1, 32*20*20)
+        mu = self.latent_mu(x)
+        logvar = self.latent_var(x)
         z = self.reparameterize(mu, logvar)
 
         return  z, mu, logvar
