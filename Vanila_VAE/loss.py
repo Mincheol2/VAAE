@@ -35,7 +35,7 @@ class Gamma_Family():
             raise Exception(f'the degree of freedom is not larger than 2. Divergence is not well-defined.')
 
 
-        log_det_ratio = (df + 1) / 2*(df - 1) * (torch.sum(self.prior_logvar,dim=1) - torch.sum(self.post_logvar,dim=1))
+        log_det_ratio = (df + 1) / (2*(df - 1)) * (torch.sum(self.prior_logvar,dim=1) - torch.sum(self.post_logvar,dim=1))
         log_term = (df + 1)/2 * torch.log(1 + 1/df * torch.sum( (self.post_var + (self.prior_mu-self.post_mu).pow(2)) / self.prior_var,dim=1))
         
         gamma_div = torch.mean(log_det_ratio + log_term) # Batch mean
