@@ -17,12 +17,14 @@ class Decoder(nn.Module):
         self.device = device
         self.decFC1 = nn.Linear(z_dim, 32*20*20)
         self.decConv1 = nn.ConvTranspose2d(32, 16, 5)
+        self.norm1 = nn.BatchNorm2d(16)
+
         self.decConv2 = nn.ConvTranspose2d(16, 1, 5)
 
     def forward(self, enc_z):
         z = F.relu(self.decFC1(enc_z))
         z = z.view(-1, 32, 20, 20)
-        z = F.relu(self.decConv1(z))
+        z = F.leaky_relu(self.norm1(self.decConv1(z)))
         prediction = torch.sigmoid(self.decConv2(z))
 
         return prediction

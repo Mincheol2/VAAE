@@ -19,7 +19,10 @@ class Encoder(nn.Module):
         self.df = df
 
         self.encConv1 = nn.Conv2d(1, 16, 5)
+        self.norm1 = nn.BatchNorm2d(16)
         self.encConv2 = nn.Conv2d(16, 32, 5)
+        self.norm2 = nn.BatchNorm2d(32)
+
         self.latent_mu = nn.Linear(32*20*20, self.z_dim)
         self.latent_var = nn.Linear(32*20*20, self.z_dim)
 
@@ -36,8 +39,8 @@ class Encoder(nn.Module):
         return mu + std * eps
 
     def forward(self, x):
-        x = F.relu(self.encConv1(x))
-        x = F.relu(self.encConv2(x))
+        x = F.leaky_relu(self.norm1(self.encConv1(x)))
+        x = F.leaky_relu(self.norm2(self.encConv2(x)))
         x = x.view(-1, 32*20*20)
         mu = self.latent_mu(x)
         logvar = self.latent_var(x)

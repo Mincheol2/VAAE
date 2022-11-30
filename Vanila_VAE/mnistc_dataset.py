@@ -20,7 +20,7 @@ class MNISTC_Dataset():
             raise Exception("The dataset is not available.")
         
         
-        # Transpose numpy : [B, H, W, C] --> tensor [B, C, H, W]
+        # Transpose numpy array: [B, H, W, C] --> tensor [B, C, H, W]
         # And, normalize mnist pixel : range [0,255] -> [0,1]
         train_B = train_img.shape[0]
         test_B = test_img.shape[0]

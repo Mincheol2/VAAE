@@ -14,9 +14,8 @@ from encoder import Encoder
 from decoder import Decoder
 from tqdm import tqdm
 from torch.utils.tensorboard import SummaryWriter
+from skimage.metrics import structural_similarity as ssim
 import numpy as np
-#import cv2
-
 
 parser = argparse.ArgumentParser(description='vanila VAE')
 parser.add_argument('--alpha', type=float, default=1.0,
@@ -29,16 +28,18 @@ parser.add_argument('--prior_mu', type=float, default=0,
                     help='prior_mu')
 parser.add_argument('--prior_logvar', type=float, default=0,
                     help='prior_logvar')
+parser.add_argument('--epochs', type=int, default=100,
+                    help='number of epochs to train (default: 100)')
 parser.add_argument('--seed', type=int, default=999,
                     help='set seed number (default: 999)')
 parser.add_argument('--batch_size', type=int, default=64,
                     help='input batch size for training (default: 64)')
 parser.add_argument('--zdim',  type=int, default=32,
                     help='the z size for training (default: 512)')
-parser.add_argument('--epochs', type=int, default=100,
-                    help='number of epochs to train (default: 100)')
 parser.add_argument('--lr', type=float, default=1e-4,
                     help='learning rate')
+parser.add_argument('--frac', type=float, default=0.1,
+                    help='fraction of noisy dataset')
 parser.add_argument('--no_cuda', action='store_true',
                     help='enables CUDA training')
 parser.add_argument('-s', '--save', action='store_true', default=True,
@@ -81,7 +82,6 @@ if not os.path.exists(model_dir):
     os.makedirs(model_dir)
 ## For tensorboard ##
 writer = SummaryWriter(model_dir + 'Tensorboard_results')
-from skimage.metrics import structural_similarity as ssim
 def train(train_loader, encoder, decoder, opt, epoch, prior_mu, prior_logvar, alpha, beta, df):
     encoder.train()
     decoder.train()
@@ -94,11 +94,6 @@ def train(train_loader, encoder, decoder, opt, epoch, prior_mu, prior_logvar, al
         recon_img = decoder(z)
         recon_loss = decoder.loss(recon_img, data, input_dim)
         current_loss = div_loss + recon_loss
-        
-        writer.add_scalar("Train/Reconstruction Error", recon_loss.item(), batch_idx + epoch * (len(train_loader.dataset)/args.batch_size) )
-        writer.add_scalar("Train/KL-Divergence", div_loss.item(), batch_idx + epoch * (len(train_loader.dataset)/args.batch_size) )
-        writer.add_scalar("Train/Total Loss" , current_loss.item(), batch_idx + epoch * (len(train_loader.dataset)/args.batch_size) )
-
         current_loss.backward()
 
         total_loss.append(current_loss.item())
@@ -109,8 +104,13 @@ def train(train_loader, encoder, decoder, opt, epoch, prior_mu, prior_logvar, al
                 epoch, batch_idx * len(data), len(train_loader.dataset),
                        100. * batch_idx / len(train_loader),
                        current_loss.item() / len(data)))
+
+            writer.add_scalar("Train/Reconstruction Error", recon_loss.item(), batch_idx + epoch * (len(train_loader.dataset)/args.batch_size) )
+            writer.add_scalar("Train/KL-Divergence", div_loss.item(), batch_idx + epoch * (len(train_loader.dataset)/args.batch_size) )
+            writer.add_scalar("Train/Total Loss" , current_loss.item(), batch_idx + epoch * (len(train_loader.dataset)/args.batch_size) )
+
         
-        return total_loss
+    return total_loss
 
 
 def reconstruction(test_loader, encoder, decoder, ep, prior_mu, prior_logvar, alpha, beta, df=0):
@@ -149,7 +149,7 @@ def reconstruction(test_loader, encoder, decoder, ep, prior_mu, prior_logvar, al
                            100. * batch_idx / len(test_loader),
                            current_loss.item() / len(data)))
         if batch_idx == 0:
-            n = min(data.size(0), 8)
+            n = min(data.size(0), 32)
             comparison = torch.cat([data[:n], recon_img.view(args.batch_size, 1, 28, 28)[:n]]) # (16, 1, 28, 28)
             grid = torchvision.utils.make_grid(comparison.cpu()) # (3, 62, 242)
             writer.add_image("Test image - Above: Real data, below: reconstruction data", grid, epoch)
@@ -159,26 +159,32 @@ def reconstruction(test_loader, encoder, decoder, ep, prior_mu, prior_logvar, al
 
 
 
+## Load trainset, testset and trainloader, testloader ###
+# transform.Totensor() is used to normalize mnist data. Range : [0, 255] -> [0,1]
 transformer = transforms.Compose([transforms.ToTensor()])
-
-if args.dataset == "mnist":
-    trainset = torchvision.datasets.MNIST(root='./MNIST', train=True,
+trainset = torchvision.datasets.MNIST(root='./MNIST', train=True,
                                           download=True, transform=transformer)
+testset = torchvision.datasets.MNIST(root='./MNIST', train=False,
+                                         download=True, transform=transformer)
+                                         
+# Load MNIST-C dataset
+if args.dataset != "mnist":
+    MNISTC = MNISTC_Dataset()
+    # Train with MNISTC, and reconstruct MNIST data
+    noise_trainset, _ = MNISTC.get_dataset(args.dataset)
+    N = noise_trainset.tensors[0].shape[0] # Total : 60000
+    rand_indice = np.random.choice(N, int(args.frac*N))
+    noise_trainset = torch.utils.data.Subset(trainset, rand_indice)
+    trainset = torch.utils.data.ConcatDataset([trainset, noise_trainset])
     testset = torchvision.datasets.MNIST(root='./MNIST', train=False,
                                          download=True, transform=transformer)
-else:
-    MNISTC = MNISTC_Dataset()
-
-    # Train with MNISTC noisy data, and reconstruct MNIST data
-    trainset, _ = MNISTC.get_dataset(args.dataset)
-    testset = torchvision.datasets.MNIST(root='./MNIST', train=False, download=True, transform=transformer)
-
-
+    
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, shuffle=True, num_workers=2)
 testloader = torch.utils.data.DataLoader(testset, batch_size=args.batch_size, shuffle=True, num_workers=2)
 
 
 
+## INIT ##
 image_size = 28
 input_dim = 784 # 28**2 : MNIST (I'll generalize this param for any dataset)
 
@@ -188,9 +194,6 @@ lr = args.lr
 opt = optim.Adam(list(encoder.parameters()) +
                  list(decoder.parameters()), lr=lr, eps=1e-6, weight_decay=1e-5)
 
-
-
-
 # ============== run ==============
 if args.load:
     state = torch.load(model_dir+'Vanilavae.tch')
@@ -199,11 +202,9 @@ if args.load:
     state2 = torch.load(model_dir+'Vanilavae.tchopt')
     ep = state2["ep"]+1
     opt.load_state_dict(state2["opt"])
-      
     reconstruction(testloader, encoder, decoder, ep,alpha, beta)
     writer.close()
 else:
-
     for epoch in tqdm(range(0, args.epochs)):
         train(trainloader, encoder, decoder, opt, epoch, args.prior_mu, args.prior_logvar, alpha, beta, df)
         reconstruction(testloader, encoder, decoder, epoch, args.prior_mu, args.prior_logvar,alpha, beta, df)
