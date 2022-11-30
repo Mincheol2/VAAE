@@ -3,7 +3,16 @@ import numpy as np
 from torch.utils.data import TensorDataset
 import torchvision.transforms as transforms
 
-noise_list = {}
+class MYTensorDataset(torch.utils.data.Dataset):
+    def __init__(self, *tensors) -> None:
+        self.tensors = tensors
+
+    def __getitem__(self, index):
+        return tuple(tensor[index] for tensor in self.tensors)
+
+    def __len__(self):
+        return self.tensors[0].size(0)
+
 class MNISTC_Dataset():
     def __init__(self, path='.', train=True, transform=None):
         self.path = path + '/mnist_c/'
@@ -38,6 +47,6 @@ class MNISTC_Dataset():
         del train_img
         del test_img
 
-        train_data = TensorDataset(train_dataset, torch.tensor(train_class))
-        test_data = TensorDataset(test_dataset, torch.tensor(test_class))
+        train_data = MYTensorDataset(train_dataset, train_class)
+        test_data = MYTensorDataset(test_dataset, test_class)
         return (train_data,test_data)
