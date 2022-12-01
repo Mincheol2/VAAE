@@ -38,9 +38,7 @@ parser.add_argument('--zdim',  type=int, default=32,
                     help='the z size for training (default: 512)')
 parser.add_argument('--lr', type=float, default=1e-4,
                     help='learning rate')
-parser.add_argument('--MNISTfrac', type=float, default=0.1,
-                    help='fraction of MNIST dataset')
-parser.add_argument('--frac', type=float, default=0.01,
+parser.add_argument('--frac', type=float, default=0.5,
                     help='fraction of noisy dataset')
 parser.add_argument('--no_cuda', action='store_true',
                     help='enables CUDA training')
@@ -101,7 +99,7 @@ def train(train_loader, encoder, decoder, opt, epoch, prior_mu, prior_logvar, al
         total_loss.append(current_loss.item())
         opt.step()
 
-        if batch_idx % 20 == 0:
+        if batch_idx % 50 == 0:
             print('Train Epoch: {} [{}/{} ({:.0f}%)]\t Loss: {:.4f}'.format(
                 epoch, batch_idx * len(data), len(train_loader.dataset),
                        100. * batch_idx / len(train_loader),
@@ -163,23 +161,38 @@ def reconstruction(test_loader, encoder, decoder, ep, prior_mu, prior_logvar, al
 
 ## Load trainset, testset and trainloader, testloader ###
 # transform.Totensor() is used to normalize mnist data. Range : [0, 255] -> [0,1]
-transformer = transforms.Compose([transforms.ToTensor()])
-trainset = torchvision.datasets.MNIST(root='./MNIST', train=True,
-                                          download=True, transform=transformer)
-N = 60000 # Total : 60000
-rand_indice = np.random.choice(N, int(args.MNISTfrac*N))                                          
-trainset = torch.utils.data.Subset(trainset, indices=rand_indice)                                          
-testset = torchvision.datasets.MNIST(root='./MNIST', train=False,
-                                         download=True, transform=transformer)
-                                 
+
+MNISTC = MNISTC_Dataset()
+trainset, testset = MNISTC.get_dataset('identity')
+                              
 # Load MNIST-C dataset
 if args.dataset != "mnist":
-    MNISTC = MNISTC_Dataset()
+    train_N = 60000 # Total : 60000
+    test_N = 10000
+    noise_trainset, noise_testset = MNISTC.get_dataset(args.dataset)
+
+    def make_masking(N,frac):
+
+        indice = np.arange(0,N)
+        mask = np.zeros(N,dtype=bool)
+        rand_indice = np.random.choice(N, int(frac*N))
+        mask[rand_indice] = True
+        
+        return indice[mask], indice[~mask]
+
+    I1, I2 = make_masking(train_N,args.frac)
+    trainset = torch.utils.data.Subset(trainset, indices=I1)       
+    noise_trainset = torch.utils.data.Subset(noise_trainset, indices=I2)                                          
+    
+    i1, i2 = make_masking(test_N,args.frac)                                  
+    testset = torch.utils.data.Subset(testset, indices=i1)
+    noise_testset = torch.utils.data.Subset(noise_testset, indices=i2)
+   
     # Train with MNISTC, and reconstruct MNIST data
-    noise_trainset, _ = MNISTC.get_dataset(args.dataset)
-    rand_indice = np.random.choice(N, int(args.frac*N))
-    noise_trainset = torch.utils.data.Subset(noise_trainset, indices=rand_indice)
+    
     trainset = torch.utils.data.ConcatDataset([trainset, noise_trainset])
+    testset = torch.utils.data.ConcatDataset([testset, noise_testset])
+
 
 
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, shuffle=True, num_workers=2)
