@@ -37,7 +37,7 @@ class Gamma_Family():
 
 
         log_det_ratio = (df + 1) / (2*(df - 1)) * (torch.sum(self.prior_logvar,dim=2) - torch.sum(self.post_logvar,dim=2))
-        log_term = (df + 1)/2 * torch.log(1 + 1/df * torch.sum( (self.post_var + (self.prior_mu-self.post_mu).pow(2)) / self.prior_var ,dim=2) )
+        log_term = (df + 1)/2 * torch.log(1 + 1/(df-2) * torch.sum( self.post_var / self.prior_var,dim=2) + 1/df * torch.sum( (self.prior_mu-self.post_mu).pow(2) / self.prior_var,dim=2))
         
         gamma_div = torch.mean(log_det_ratio + log_term) # Batch mean
         return gamma_div
