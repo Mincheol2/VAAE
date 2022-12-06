@@ -42,7 +42,7 @@ class Encoder(nn.Module):
         self.linear_var = nn.Linear(self.layer_dim, z_dim)
         
 
-    def reparameterize(self, mu, logvar, mi=False):
+    def reparameterize(self, mu, logvar, mi=False):  
         if not self.training and not mi:
             return mu
         else:
@@ -97,8 +97,8 @@ class Encoder(nn.Module):
             z = self.reparameterize(mu_, logvar_) # [seq_len, batch, z_dim]
             z = torch.sum(z,0) # [batch, z_dim]
 
-        #if not self.training:
-        #    mi_per_batch = self.cal_mi(mu.squeeze(0), logvar.squeeze(0))
+        if not self.training:
+           mi_per_batch = self.cal_mi(mu.squeeze(0), logvar.squeeze(0))
 
         if self.partial_lag and self.partial in ['last1','last25','last50', 'last75']:
             if self.partial == 'last1':
@@ -117,7 +117,7 @@ class Encoder(nn.Module):
                 mu_ = mu_[-start_index:]
                 logvar_ = logvar_[-start_index:]
 
-        return  z, mu_, logvar_, self.get_sen_len(src)
+        return  z, mu_, logvar_, self.get_sen_len(src), mi_per_batch
 
     def loss(self, mu, logvar, prior_mu, prior_logvar, alpha, beta, df):
         # Alpha div
@@ -146,3 +146,38 @@ class Encoder(nn.Module):
             m = torch.max(value)
             sum_exp = torch.sum(torch.exp(value - m))
             return m + torch.log(sum_exp)
+
+    def cal_mi(self, last_mu, last_logvar):
+        """Approximate the mutual information between x and z
+        I(x, z) = E_xE_{q(z|x)}log(q(z|x)) - E_xE_{q(z|x)}log(q(z))
+        Returns: Float
+        """
+
+        # [x_batch, nz]
+        # mu, logvar = self.forward(x)
+
+        x_batch, nz = last_mu.size()
+
+        # E_{q(z|x)}log(q(z|x)) = -0.5*nz*log(2*\pi) - 0.5*(1+last_logvar).sum(-1)
+        neg_entropy = (-0.5 * nz * math.log(2 * math.pi)- 0.5 * (1 + last_logvar).sum(-1)).mean()
+
+        # [z_batch, 1, nz]
+        _, z_samples = self.reparameterize(last_mu, last_logvar, True)
+        z_samples = z_samples.unsqueeze(1)
+        # [1, x_batch, nz]
+        last_mu, last_logvar = last_mu.unsqueeze(0), last_logvar.unsqueeze(0)
+        var = last_logvar.exp()
+
+        # (z_batch, x_batch, nz)
+        dev = z_samples - last_mu
+
+        # (z_batch, x_batch)
+        log_density = -0.5 * ((dev ** 2) / var).sum(dim=-1) - \
+            0.5 * (nz * math.log(2 * math.pi) + last_logvar.sum(-1))
+
+        # log q(z): aggregate posterior
+        # [z_batch]
+        log_qz = self.log_sum_exp(log_density, dim=1) - math.log(x_batch)
+
+        return (neg_entropy - log_qz.mean(-1)).item()
+    
