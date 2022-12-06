@@ -22,7 +22,7 @@ def sentence_acc(prod, target):
     correct = torch.eq(prod, target).to(dtype=torch.float).sum()
     return correct.item()
 
-def train(encoder, decoder, opt, device, corpus, ep, prior_mu, prior_logvar, alpha, beta, df=0):
+def train(encoder, decoder, opt, device, corpus, model_dir, ep, prior_mu, prior_logvar, alpha, beta, df=0):
     
     encoder.train()
     decoder.train()
@@ -38,7 +38,7 @@ def train(encoder, decoder, opt, device, corpus, ep, prior_mu, prior_logvar, alp
         opt.zero_grad()
         total += sen.shape[1]
         sen = sen.to(device)
-        z, mu, logvar, sen_len = encoder(sen)
+        z, mu, logvar, sen_len, _ = encoder(sen)
 
         prod = decoder(z, sen)
         kl_loss = encoder.loss(mu, logvar, prior_mu, prior_logvar, alpha, beta, df)
@@ -57,7 +57,17 @@ def train(encoder, decoder, opt, device, corpus, ep, prior_mu, prior_logvar, alp
         
     print(
         f"\nTrain {ep}: recon_loss={(recon_loss_total/(batch_total)):.04f}, div_loss={(kl_loss_total/(batch_total)):.04f}, nll_loss={((recon_loss_total+kl_loss_total)/(batch_total)):.04f}, nll_loss_perword={((recon_loss_total+kl_loss_total)/words_total):.04f}, ppl={(np.exp((recon_loss_total+kl_loss_total)/words_total)):.04f}, acc={(correct_total/words_total):.04f}")
-    return recon_loss_total/(batch_total), kl_loss_total/(batch_total),  correct_total/words_total, (recon_loss_total+kl_loss_total)/(batch_total), np.exp((recon_loss_total+kl_loss_total)/words_total)
+
+
+    recon_loss = recon_loss_total/(batch_total)
+    kl_loss = kl_loss_total/(batch_total)
+    nll_loss = ((recon_loss_total+kl_loss_total)/(batch_total))
+    ppl = (recon_loss_total+kl_loss_total)/words_total
+    acc= correct_total/words_total
+    with open(model_dir+'train_TWRvae_loss.txt', 'a') as f:
+        f.write(f"{ep} {recon_loss} {kl_loss} {nll_loss} {ppl} {acc}\n")
+    
+    return recon_loss_total/(batch_total), kl_loss_total/(batch_total), correct_total/words_total, (recon_loss_total+kl_loss_total)/(batch_total), np.exp((recon_loss_total+kl_loss_total)/words_total)
 
 # =================================
 
@@ -73,6 +83,7 @@ def reconstruction(encoder, decoder, opt, device, corpus, raw_corpus, recon_dir,
     kl_loss_total = 0
     words_total = 0
     batch_total = 0
+    mi_total = 0
     
     for i, sen in enumerate(corpus):
         b_size = sen.shape[1]
@@ -80,7 +91,7 @@ def reconstruction(encoder, decoder, opt, device, corpus, raw_corpus, recon_dir,
         sen = sen.to(device)
         
         with torch.no_grad():
-            z, mu, logvar, sen_len = encoder(sen)
+            z, mu, logvar, sen_len, mi_batch = encoder(sen)
         
             recon_mu = decoder(z, sen)
             kl_loss = encoder.loss(mu, logvar, prior_mu, prior_logvar, alpha, beta, df)
@@ -96,15 +107,15 @@ def reconstruction(encoder, decoder, opt, device, corpus, raw_corpus, recon_dir,
             
             words_total = words_total + words
             batch_total += b_size
-    
+            mi_total += mi_batch * b_size
     recon_loss = recon_loss_total/batch_total
     kl_loss = kl_loss_total/batch_total
     nll_loss = (recon_loss_total+kl_loss_total)/batch_total
     nll_loss_perword = (recon_loss_total+kl_loss_total)/words_total
     ppl = np.exp((recon_loss_total+kl_loss_total)/words_total)
+    mi = mi_total/batch_total
     
-    
-    print(f"Test: recon_loss:{recon_loss:.04f}, kl_loss:{kl_loss:.04f}, nll_loss:{nll_loss:.04f}, nll_loss_perword:{nll_loss_perword:.04f}, ppl:{ppl:.04f}")
+    print(f"Test: recon_loss:{recon_loss:.04f}, kl_loss:{kl_loss:.04f}, nll_loss:{nll_loss:.04f}, nll_loss_perword:{nll_loss_perword:.04f}, ppl:{ppl:.04f}, MI : {mi:.04f}")
 
     
     text = []
@@ -117,6 +128,6 @@ def reconstruction(encoder, decoder, opt, device, corpus, raw_corpus, recon_dir,
             f.write("\n".join(text))
             
     with open(recon_dir+f"test_TWRvae_loss.txt", "a") as f:
-        f.write(f"{ep}\t{recon_loss}\t{kl_loss}\t{nll_loss}\t{ppl}\n")
+        f.write(f"{ep} {recon_loss} {kl_loss} {nll_loss} {ppl} {mi}\n")
     
     return ppl

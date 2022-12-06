@@ -112,7 +112,7 @@ dataloader_train = BatchIter(Train, batch_size)
 dataloader_test = BatchIter(Test, batch_size)
 
 alpha = args.alpha
-beta = args.beta
+beta = args.alpha
 df = args.df
 
 
@@ -171,17 +171,13 @@ else:
     eval_ppl = 1e5
 
     with open(model_dir+'train_TWRvae_loss.txt', 'w') as f:
-        f.write("ep \t recon_loss \t div_loss \t acc \t nll_loss \t ppl \n")
+        f.write("ep recon_loss div_loss nll_loss ppl acc\n")
     with open(recon_dir+'test_TWRvae_loss.txt', 'w') as f:
-        f.write("ep \t recon_loss \t div_loss \t NLL \t PPL \n")
+        f.write("ep recon_loss div_loss NLL PPL MI \n")
 
 
     for ep in tqdm(range(ep+1, args.epochs+1)):
-        recon_loss, var_loss, acc, nll_loss, ppl = train(encoder, decoder, opt, device, dataloader_train, ep, args.prior_mu, args.prior_logvar, alpha, beta, df)
-        history.append(f"{ep}\t{recon_loss}\t{var_loss}\t{acc}\t{nll_loss}\t{ppl}")
-        with open(model_dir+'train_TWRvae_loss.txt', 'w') as f:
-            f.write("\n".join(history))
-      
+        train(encoder, decoder, opt, device, dataloader_train, model_dir, ep, args.prior_mu, args.prior_logvar, alpha, beta, df)
         test_ppl = reconstruction(encoder, decoder, opt, device, dataloader_test, Test, recon_dir, ep, args.prior_mu, args.prior_logvar, alpha, beta, df)
 
         if args.save and eval_ppl < Best_ppl:
