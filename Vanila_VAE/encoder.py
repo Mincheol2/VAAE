@@ -32,7 +32,7 @@ class Encoder(nn.Module):
             eps = torch.randn_like(std) # Normal dist
         else:
             Tdist = torch.distributions.studentT.StudentT(self.df)
-            eps = Tdist.sample() # Student T dist
+            eps = Tdist.sample(sample_shape = torch.Size(prior_mu.shape)) # Student T dist
             
         
         
