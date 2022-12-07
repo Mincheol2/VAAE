@@ -204,7 +204,7 @@ testloader = torch.utils.data.DataLoader(testset, batch_size=args.batch_size, sh
 image_size = 28
 input_dim = 784 # 28**2 : MNIST (I'll generalize this param for any dataset)
 
-encoder = Encoder(input_dim, args.zdim).to(DEVICE)
+encoder = Encoder(input_dim, args.zdim, DEVICE).to(DEVICE)
 decoder = Decoder(input_dim, args.zdim, device=DEVICE).to(DEVICE)
 lr = args.lr
 opt = optim.Adam(list(encoder.parameters()) +

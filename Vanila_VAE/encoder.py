@@ -11,13 +11,14 @@ from loss import *
 
 
 class Encoder(nn.Module):
-    def __init__(self, input_dim, z_dim,df=0):
+    def __init__(self, input_dim, z_dim,device, df=0):
         super(Encoder, self).__init__()
 
         self.input_dim = input_dim
         self.z_dim = z_dim
         self.df = df
-
+        self.device = device
+        
         self.encConv1 = nn.Conv2d(1, 16, 5)
         self.norm1 = nn.BatchNorm2d(16)
         self.encConv2 = nn.Conv2d(16, 32, 5)
@@ -32,7 +33,7 @@ class Encoder(nn.Module):
             eps = torch.randn_like(std) # Normal dist
         else:
             Tdist = torch.distributions.studentT.StudentT(self.df)
-            eps = Tdist.sample(sample_shape = torch.Size(prior_mu.shape)) # Student T dist
+            eps = Tdist.sample(sample_shape = torch.Size(prior_mu.shape)).to(self.device) # Student T dist
             
         
         
