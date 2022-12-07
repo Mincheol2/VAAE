@@ -11,7 +11,7 @@ from loss import *
 
 
 class Encoder(nn.Module):
-    def __init__(self, input_dim, emb_dim, hid_dim, z_dim, n_layers, dropout, bidirectional=False, rnn_type='lstm', partial='last75', z_mode=None, partial_lag=None, df=0):
+    def __init__(self, input_dim, emb_dim, hid_dim, z_dim, n_layers, dropout, device, bidirectional=False, rnn_type='lstm', partial='last75', z_mode=None, partial_lag=None, df=0):
         super(Encoder, self).__init__()
         self.input_dim = input_dim
         self.emb_dim = emb_dim
@@ -19,6 +19,7 @@ class Encoder(nn.Module):
         self.z_dim = z_dim
         self.n_layers = n_layers
         self.dropout = dropout
+        self.device = device
         self.rnn_type = rnn_type
         self.partial = partial
         self.partial_lag = partial_lag
@@ -51,7 +52,7 @@ class Encoder(nn.Module):
                 eps = torch.randn_like(std) # Normal dist
             else:
                 Tdist = torch.distributions.studentT.StudentT(self.df)
-                eps = Tdist.sample(sample_shape = torch.Size(mu.shape)) # Student T dist
+                eps = Tdist.sample(sample_shape = torch.Size(mu.shape)).to(self.device) # Student T dist
 
             if not self.training and mi:
                 return mu, mu + eps*std

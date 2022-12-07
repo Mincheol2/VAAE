@@ -117,7 +117,7 @@ df = args.df
 
 
 
-encoder = Encoder(voca_dim, emb_dim, hid_dim, args.zdim, args.layers, args.dropout,
+encoder = Encoder(voca_dim, emb_dim, hid_dim, args.zdim, args.layers, args.dropout, device,
               rnn_type=args.rnn_type,
               partial=args.partial_type,
               z_mode=args.z_type,
