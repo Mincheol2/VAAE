@@ -112,7 +112,7 @@ dataloader_train = BatchIter(Train, batch_size)
 dataloader_test = BatchIter(Test, batch_size)
 
 alpha = args.alpha
-beta = args.alpha
+beta = args.beta
 df = args.df
 
 
