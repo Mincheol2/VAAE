@@ -44,7 +44,7 @@ To train the model, (Default : MNIST)
 python main.py --epochs 50 --alpha 1.0 --beta 1.0 #Default KL Div
 ```
 
-If you test gamma-divergence, use positive-valued **df** instead. 
+If you test gamma-divergence, use **df** (df>2) instead. 
 
 ```
 python main.py--epochs 50 --beta 1.0 --df 3.0 #Gamma Div

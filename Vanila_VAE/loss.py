@@ -26,7 +26,7 @@ class Gamma_Family():
     def gamma_divergence(self, df):
         '''
         Generalized gamma divergence.
-        paramter : df > 2 
+        paramter : df > 2
         (This is because the variance of T dist : df/(df-2), v>2)
         cf) Instead of gamma, we use df(degree of freedom) as a paramter. (gamma = -2 /(1+df))
         '''
@@ -35,8 +35,10 @@ class Gamma_Family():
             raise Exception(f'the degree of freedom is not larger than 2. Divergence is not well-defined.')
 
 
-        log_det_ratio = (df + 1) / (2*(df - 1)) * (torch.sum(self.prior_logvar,dim=1) - torch.sum(self.post_logvar,dim=1))
-        log_term = (df + 1)/2 * torch.log(1 + 1/(df-2) * torch.sum( self.post_var / self.prior_var,dim=1) + 1/df * torch.sum( (self.prior_mu-self.post_mu).pow(2) / self.prior_var,dim=1))
+        # dimension : [B : batch size, D : zdim]
+        zdim = self.post_mu.shape[1]
+        log_det_ratio = (df + zdim) / (2*(df + zdim - 2)) * (torch.sum(self.prior_logvar,dim=1) - torch.sum(self.post_logvar,dim=1))
+        log_term = (df + zdim)/2 * torch.log(1 + 1/(df-2) * torch.sum( self.post_var / self.prior_var,dim=1) + 1/df * torch.sum( (self.prior_mu-self.post_mu).pow(2) / self.prior_var,dim=1))
         
         gamma_div = torch.mean(log_det_ratio + log_term) # Batch mean
         return gamma_div
