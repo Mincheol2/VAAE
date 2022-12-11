@@ -7,6 +7,7 @@ import random
 import math
 import numpy as np
 from loss import *
+import scipy.special as scp
 
 
 
@@ -43,7 +44,7 @@ class Encoder(nn.Module):
         self.linear_var = nn.Linear(self.layer_dim, z_dim)
         
 
-    def reparameterize(self, mu, logvar, mi=False):  
+    def reparameterize(self, mu, logvar, mi=False):
         if not self.training and not mi:
             return mu
         else:
@@ -149,6 +150,13 @@ class Encoder(nn.Module):
             return m + torch.log(sum_exp)
 
     def cal_mi(self, last_mu, last_logvar):
+        if self.df == 0:
+            return self.cal_normal_mi(last_mu, last_logvar)
+        else:
+            return self.cal_tdist_mi(last_mu, last_logvar)
+        
+
+    def cal_normal_mi(self, last_mu, last_logvar):
         """Approximate the mutual information between x and z
         I(x, z) = E_xE_{q(z|x)}log(q(z|x)) - E_xE_{q(z|x)}log(q(z))
         Returns: Float
@@ -182,3 +190,38 @@ class Encoder(nn.Module):
 
         return (neg_entropy - log_qz.mean(-1)).item()
     
+    def cal_tdist_mi(self, last_mu, last_logvar):
+        """Approximate the mutual information between x and z
+        when x and z follow student t-distribtuion.
+        I(x, z) = E_xE_{q(z|x)}log(q(z|x)) - E_xE_{q(z|x)}log(q(z))
+        Returns: Float
+        """
+        x_batch, nz = last_mu.size() # [Batch, zdim]
+
+        df_const = 0.5*(self.df+nz)
+        log_determinant = 0.5*last_logvar.sum(-1)
+        log_gamma_diff = scp.loggamma(df_const) - scp.loggamma(self.df/2) - 0.5*nz*math.log(self.df*math.pi)
+        digamma_diff = scp.digamma(df_const) - scp.digamma(self.df/2)
+        
+        # E_{q(z|x)}log(q(z|x))
+        neg_entropy = (log_gamma_diff - df_const * digamma_diff - log_determinant).mean()
+        
+        # [z_batch, 1, nz]
+        _, z_samples = self.reparameterize(last_mu, last_logvar, True)
+        z_samples = z_samples.unsqueeze(1)
+        
+        # [1, x_batch, nz]
+        last_mu, last_logvar = last_mu.unsqueeze(0), last_logvar.unsqueeze(0)
+        var = last_logvar.exp()
+
+        # (z_batch, x_batch, nz)
+        dev = z_samples - last_mu
+        
+        # (z_batch, x_batch)
+        log_density = - df_const * torch.log(1+(1/self.df)*((dev ** 2) / var).sum(dim=-1)) + log_gamma_diff - log_determinant
+
+        # log q(z): aggregate posterior
+        # [z_batch]
+        log_qz = self.log_sum_exp(log_density, dim=1) - math.log(x_batch)
+
+        return (neg_entropy - log_qz.mean(-1)).item()
