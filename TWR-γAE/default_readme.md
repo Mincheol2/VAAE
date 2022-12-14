@@ -32,7 +32,7 @@ python main.py -dt ptb #Default KL Div
 
 ### Experiments : γ-divergence.
 
-- For repoducing our experiments, you may fine-tune these arguments.
+- For reproducing our experiments, you may fine-tune these arguments.
 
 |argument|description|default value|
 |------|---|---|
@@ -105,7 +105,7 @@ else:
     eps = Tdist.sample(sample_shape = torch.Size(mu.shape)).to(self.device) # Student T dist
 ```
 
-#### Caclulate Mutual Information in t-distribution
+#### Caclulate Mutual Information in T distribution
 
 - Because of the same reason, there are two versions of calculate MI. : cal_normal_mi and cal_tdist_mi. 
 
