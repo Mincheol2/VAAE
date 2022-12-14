@@ -7,7 +7,7 @@ We edit some vague parts in the original baseline, and modify some archidecture 
 
 The baseline is from [Here](https://github.com/ruizheliUOA/TWR-VAE/).
 
-## Tutorials
+## Tutorial
 
 [Effect of γ Divergence](https://github.com/Mincheol2/VAAE/blob/main/TWR-%CE%B3AE/TWR_VAE_colab.ipynb) : run the model & visulization the result.
 
