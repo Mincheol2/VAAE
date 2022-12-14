@@ -9,7 +9,7 @@ The baseline is [Here](https://github.com/ruizheliUOA/TWR-VAE/).
 
 ## Tutorial
 
-[Effect of γ Divergence](https://github.com/Mincheol2/VAAE/blob/main/TWR-%CE%B3AE/TWR_VAE_colab.ipynb) : run the model & visulization the result.
+[Effect of γ Divergence](https://github.com/Mincheol2/VAAE/blob/main/TWR-%CE%B3AE/TWR_VAE_colab.ipynb) : run the model & visulize the result.
 
 ### Subtask Code
 
@@ -39,7 +39,7 @@ python main.py -dt ptb #Default KL Div
 |--beta|Weight for divergence loss. |1.0|
 |--df |Paramter for γ-divergence.|1.0|
 |--rnn|rnn architecture type : rnn/gru/lstm|'rnn'|
-|--epoch| the number of epochs| 100 |
+|--epochs| the number of epochs| 100 |
 
 - If you test γ-divergence, please use **df > 2**. (Because the variance of T distribution exists when df > 2)
 

@@ -37,8 +37,8 @@ parser.add_argument('--hidden_size', type=int, default=256,
                     help='hidden size for training (default: 256)')
 parser.add_argument('--zdim',  type=int, default=32,
                     help='the z size for training (default: 512)')
-parser.add_argument('--epochs', type=int, default=200,
-                    help='number of epochs to train (default: 200)')
+parser.add_argument('--epochs', type=int, default=100,
+                    help='number of epochs to train (default: 100)')
 parser.add_argument('--layers', type=int, default=1,
                     help='number of layers of rnns in encoder and decoder')
 parser.add_argument('--dropout', type=float, default=0.5,
