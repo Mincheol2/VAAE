@@ -6,7 +6,7 @@ I edit some vague parts in the original model and write new codes to help my pro
 
 Currently, there is only **lang-model part**, not dialogue part.
 
-The baseline is from [Here](https://github.com/ruizheliUOA/TWR-VAE/)
+The baseline is [Here](https://github.com/ruizheliUOA/TWR-VAE/)
 
 
 
