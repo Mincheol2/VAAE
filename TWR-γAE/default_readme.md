@@ -9,7 +9,7 @@ The baseline is [Here](https://github.com/ruizheliUOA/TWR-VAE/).
 
 ## Tutorial
 
-[Effect of γ Divergence](https://github.com/Mincheol2/VAAE/blob/main/TWR-%CE%B3AE/TWR_VAE_colab.ipynb) : run the model & visulization the result.
+[Effect of γ Divergence](https://github.com/Mincheol2/VAAE/blob/main/TWR-%CE%B3AE/TWR_VAE_colab.ipynb) : run the model & visulize the result.
 
 ### Subtask Code
 
