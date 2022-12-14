@@ -5,7 +5,7 @@ This repository is the implementaion of our final NLP project, by **Mincheol Cho
 
 We edit some vague parts in the original baseline, and modify some archidecture designs.
 
-The baseline is from [Here](https://github.com/ruizheliUOA/TWR-VAE/).
+The baseline is [Here](https://github.com/ruizheliUOA/TWR-VAE/).
 
 ## Tutorial
 
