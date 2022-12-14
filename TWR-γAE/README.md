@@ -100,10 +100,9 @@ def gamma_divergence(self, df):
 ```
 if self.df == 0:
     eps = torch.randn_like(std) # Normal dist
-    
 else:
     Tdist = torch.distributions.studentT.StudentT(self.df)
-    eps = Tdist.sample() # Student T dist
+    eps = Tdist.sample(sample_shape = torch.Size(mu.shape)).to(self.device) # Student T dist
 ```
 
 #### Caclulate Mutual Information in t-distribution
