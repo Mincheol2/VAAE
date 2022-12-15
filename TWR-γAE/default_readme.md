@@ -38,7 +38,7 @@ python main.py -dt ptb #Default KL Div
 |------|---|---|
 |--beta|Weight for divergence loss. |1.0|
 |--df |Paramter for γ-divergence.|1.0|
-|--rnn|rnn architecture type : rnn/gru/lstm|'rnn'|
+|--rnn|rnn architecture type : rnn/gru/lstm|'lstm'|
 |--epochs| the number of epochs| 100 |
 
 - If you test γ-divergence, please use **df > 2**. (Because the variance of T distribution exists when df > 2)
