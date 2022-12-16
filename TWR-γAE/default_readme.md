@@ -107,7 +107,7 @@ else:
 
 #### Caclulate Mutual Information in T distribution
 
-- Because of the same reason, there are two versions of calculate MI. : cal_normal_mi and cal_tdist_mi. 
+- Because of the same reason, there are two versions of calculating MI. : cal_normal_mi and cal_tdist_mi. 
 
 ```
 def cal_tdist_mi(self, last_mu, last_logvar):
